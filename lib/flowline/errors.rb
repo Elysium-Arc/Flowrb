@@ -8,7 +8,7 @@ module Flowline
   class CycleError < Error
     attr_reader :cycle
 
-    def initialize(message = "Circular dependency detected", cycle: nil)
+    def initialize(message = 'Circular dependency detected', cycle: nil)
       @cycle = cycle
       super(message)
     end
@@ -18,7 +18,7 @@ module Flowline
   class MissingDependencyError < Error
     attr_reader :step_name, :missing_dependency
 
-    def initialize(message = "Missing dependency", step_name: nil, missing_dependency: nil)
+    def initialize(message = 'Missing dependency', step_name: nil, missing_dependency: nil)
       @step_name = step_name
       @missing_dependency = missing_dependency
       super(message)
@@ -29,7 +29,7 @@ module Flowline
   class DuplicateStepError < Error
     attr_reader :step_name
 
-    def initialize(message = "Duplicate step", step_name: nil)
+    def initialize(message = 'Duplicate step', step_name: nil)
       @step_name = step_name
       super(message)
     end
@@ -39,7 +39,7 @@ module Flowline
   class StepError < Error
     attr_reader :step_name, :original_error, :partial_results
 
-    def initialize(message = "Step execution failed", step_name: nil, original_error: nil, partial_results: nil)
+    def initialize(message = 'Step execution failed', step_name: nil, original_error: nil, partial_results: nil)
       @step_name = step_name
       @original_error = original_error
       @partial_results = partial_results

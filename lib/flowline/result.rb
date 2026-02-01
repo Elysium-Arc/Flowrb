@@ -95,7 +95,7 @@ module Flowline
     end
 
     def inspect
-      status = success? ? "success" : "failed"
+      status = success? ? 'success' : 'failed'
       "#<Flowline::Result status=#{status} steps=#{step_results.size} duration=#{duration&.round(4)}>"
     end
   end

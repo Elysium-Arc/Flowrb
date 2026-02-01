@@ -12,7 +12,7 @@ module Flowline
       end
 
       def execute(initial_input: nil)
-        raise NotImplementedError, "Subclasses must implement #execute"
+        raise NotImplementedError, 'Subclasses must implement #execute'
       end
 
       protected

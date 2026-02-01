@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
 RSpec.describe Flowline::Pipeline do
-  describe "#initialize" do
-    it "creates an empty pipeline" do
+  describe '#initialize' do
+    it 'creates an empty pipeline' do
       pipeline = described_class.new
       expect(pipeline).to be_empty
     end
 
-    it "accepts a block for DSL" do
+    it 'accepts a block for DSL' do
       pipeline = described_class.new do
         step :fetch do
           [1, 2, 3]
@@ -18,20 +18,20 @@ RSpec.describe Flowline::Pipeline do
     end
   end
 
-  describe "#step" do
-    it "adds a step to the pipeline" do
+  describe '#step' do
+    it 'adds a step to the pipeline' do
       pipeline = described_class.new
-      pipeline.step(:fetch) { "result" }
+      pipeline.step(:fetch) { 'result' }
       expect(pipeline[:fetch]).not_to be_nil
     end
 
-    it "returns self for chaining" do
+    it 'returns self for chaining' do
       pipeline = described_class.new
-      result = pipeline.step(:fetch) { "result" }
+      result = pipeline.step(:fetch) { 'result' }
       expect(result).to eq(pipeline)
     end
 
-    it "accepts dependencies" do
+    it 'accepts dependencies' do
       pipeline = described_class.new do
         step :a do
           1
@@ -44,7 +44,7 @@ RSpec.describe Flowline::Pipeline do
       expect(pipeline[:b].dependencies).to eq([:a])
     end
 
-    it "accepts multiple dependencies" do
+    it 'accepts multiple dependencies' do
       pipeline = described_class.new do
         step :a do
           1
@@ -61,8 +61,8 @@ RSpec.describe Flowline::Pipeline do
     end
   end
 
-  describe "#run" do
-    it "executes a simple pipeline" do
+  describe '#run' do
+    it 'executes a simple pipeline' do
       pipeline = described_class.new do
         step :fetch do
           [1, 2, 3]
@@ -74,7 +74,7 @@ RSpec.describe Flowline::Pipeline do
       expect(result[:fetch].output).to eq([1, 2, 3])
     end
 
-    it "passes output to dependent steps" do
+    it 'passes output to dependent steps' do
       pipeline = described_class.new do
         step :fetch do
           [1, 2, 3]
@@ -88,18 +88,16 @@ RSpec.describe Flowline::Pipeline do
       expect(result[:double].output).to eq([2, 4, 6])
     end
 
-    it "passes initial_input to root steps" do
+    it 'passes initial_input to root steps' do
       pipeline = described_class.new do
-        step :process do |input|
-          input.upcase
-        end
+        step :process, &:upcase
       end
 
-      result = pipeline.run(initial_input: "hello")
-      expect(result[:process].output).to eq("HELLO")
+      result = pipeline.run(initial_input: 'hello')
+      expect(result[:process].output).to eq('HELLO')
     end
 
-    it "returns empty success for empty pipeline" do
+    it 'returns empty success for empty pipeline' do
       pipeline = described_class.new
       result = pipeline.run
       expect(result).to be_success
@@ -107,8 +105,8 @@ RSpec.describe Flowline::Pipeline do
     end
   end
 
-  describe "#validate!" do
-    it "validates the pipeline" do
+  describe '#validate!' do
+    it 'validates the pipeline' do
       pipeline = described_class.new do
         step :a do
           1
@@ -121,7 +119,7 @@ RSpec.describe Flowline::Pipeline do
       expect(pipeline.validate!).to be true
     end
 
-    it "raises CycleError for circular dependencies" do
+    it 'raises CycleError for circular dependencies' do
       pipeline = described_class.new do
         step :a, depends_on: :b do
           1
@@ -134,7 +132,7 @@ RSpec.describe Flowline::Pipeline do
       expect { pipeline.validate! }.to raise_error(Flowline::CycleError)
     end
 
-    it "raises MissingDependencyError for unknown dependencies" do
+    it 'raises MissingDependencyError for unknown dependencies' do
       pipeline = described_class.new do
         step :process, depends_on: :unknown do |x|
           x
@@ -145,8 +143,8 @@ RSpec.describe Flowline::Pipeline do
     end
   end
 
-  describe "#to_mermaid" do
-    it "generates mermaid diagram" do
+  describe '#to_mermaid' do
+    it 'generates mermaid diagram' do
       pipeline = described_class.new do
         step :a do
           1
@@ -157,13 +155,13 @@ RSpec.describe Flowline::Pipeline do
       end
 
       mermaid = pipeline.to_mermaid
-      expect(mermaid).to include("graph TD")
-      expect(mermaid).to include("a --> b")
+      expect(mermaid).to include('graph TD')
+      expect(mermaid).to include('a --> b')
     end
   end
 
-  describe "#steps" do
-    it "returns all steps" do
+  describe '#steps' do
+    it 'returns all steps' do
       pipeline = described_class.new do
         step :a do
           1
@@ -177,8 +175,8 @@ RSpec.describe Flowline::Pipeline do
     end
   end
 
-  describe "#[]" do
-    it "accesses steps by name" do
+  describe '#[]' do
+    it 'accesses steps by name' do
       pipeline = described_class.new do
         step :fetch do
           [1, 2, 3]
@@ -189,12 +187,12 @@ RSpec.describe Flowline::Pipeline do
     end
   end
 
-  describe "#empty?" do
-    it "returns true for empty pipeline" do
+  describe '#empty?' do
+    it 'returns true for empty pipeline' do
       expect(described_class.new).to be_empty
     end
 
-    it "returns false for non-empty pipeline" do
+    it 'returns false for non-empty pipeline' do
       pipeline = described_class.new do
         step :a do
           1
@@ -204,8 +202,8 @@ RSpec.describe Flowline::Pipeline do
     end
   end
 
-  describe "#size" do
-    it "returns the number of steps" do
+  describe '#size' do
+    it 'returns the number of steps' do
       pipeline = described_class.new do
         step :a do
           1
@@ -220,8 +218,8 @@ RSpec.describe Flowline::Pipeline do
 end
 
 RSpec.describe Flowline do
-  describe ".define" do
-    it "creates a pipeline" do
+  describe '.define' do
+    it 'creates a pipeline' do
       pipeline = described_class.define do
         step :fetch do
           [1, 2, 3]

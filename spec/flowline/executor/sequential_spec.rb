@@ -7,12 +7,21 @@ RSpec.describe Flowline::Executor::Sequential do
 
   let(:dag) { Flowline::DAG.new }
 
-  describe "#execute" do
-    it "executes steps in topological order" do
+  describe '#execute' do
+    it 'executes steps in topological order' do
       order = []
-      dag.add(make_step(:a) { order << :a; 1 })
-      dag.add(make_step(:b, [:a]) { |_| order << :b; 2 })
-      dag.add(make_step(:c, [:b]) { |_| order << :c; 3 })
+      dag.add(make_step(:a) do
+        order << :a
+        1
+      end)
+      dag.add(make_step(:b, [:a]) do |_|
+        order << :b
+        2
+      end)
+      dag.add(make_step(:c, [:b]) do |_|
+        order << :c
+        3
+      end)
 
       executor = described_class.new(dag)
       executor.execute
@@ -20,7 +29,7 @@ RSpec.describe Flowline::Executor::Sequential do
       expect(order).to eq(%i[a b c])
     end
 
-    it "passes output to single dependent" do
+    it 'passes output to single dependent' do
       dag.add(make_step(:fetch) { [1, 2, 3] })
       dag.add(make_step(:double, [:fetch]) { |data| data.map { |n| n * 2 } })
 
@@ -30,7 +39,7 @@ RSpec.describe Flowline::Executor::Sequential do
       expect(result[:double].output).to eq([2, 4, 6])
     end
 
-    it "passes outputs as kwargs to multiple dependents" do
+    it 'passes outputs as kwargs to multiple dependents' do
       dag.add(make_step(:a) { 10 })
       dag.add(make_step(:b) { 20 })
       dag.add(make_step(:c, %i[a b]) { |a:, b:| a + b })
@@ -41,16 +50,16 @@ RSpec.describe Flowline::Executor::Sequential do
       expect(result[:c].output).to eq(30)
     end
 
-    it "passes initial_input to root steps" do
-      dag.add(make_step(:process) { |input| input.upcase })
+    it 'passes initial_input to root steps' do
+      dag.add(make_step(:process, &:upcase))
 
       executor = described_class.new(dag)
-      result = executor.execute(initial_input: "hello")
+      result = executor.execute(initial_input: 'hello')
 
-      expect(result[:process].output).to eq("HELLO")
+      expect(result[:process].output).to eq('HELLO')
     end
 
-    it "handles steps with no input" do
+    it 'handles steps with no input' do
       dag.add(make_step(:fetch) { 42 })
 
       executor = described_class.new(dag)
@@ -59,18 +68,21 @@ RSpec.describe Flowline::Executor::Sequential do
       expect(result[:fetch].output).to eq(42)
     end
 
-    it "handles nil output" do
+    it 'handles nil output' do
       dag.add(make_step(:a) { nil })
-      dag.add(make_step(:b, [:a]) { |x| x.nil? ? "was nil" : "was not nil" })
+      dag.add(make_step(:b, [:a]) { |x| x.nil? ? 'was nil' : 'was not nil' })
 
       executor = described_class.new(dag)
       result = executor.execute
 
-      expect(result[:b].output).to eq("was nil")
+      expect(result[:b].output).to eq('was nil')
     end
 
-    it "records timing for each step" do
-      dag.add(make_step(:slow) { sleep(0.01); 42 })
+    it 'records timing for each step' do
+      dag.add(make_step(:slow) do
+        sleep(0.01)
+        42
+      end)
 
       executor = described_class.new(dag)
       result = executor.execute
@@ -79,7 +91,7 @@ RSpec.describe Flowline::Executor::Sequential do
       expect(result[:slow].started_at).to be_a(Time)
     end
 
-    it "records overall timing" do
+    it 'records overall timing' do
       dag.add(make_step(:a) { 1 })
 
       executor = described_class.new(dag)
@@ -90,7 +102,7 @@ RSpec.describe Flowline::Executor::Sequential do
       expect(result.duration).to be >= 0
     end
 
-    it "returns empty success for empty DAG" do
+    it 'returns empty success for empty DAG' do
       executor = described_class.new(dag)
       result = executor.execute
 
@@ -98,7 +110,7 @@ RSpec.describe Flowline::Executor::Sequential do
       expect(result.completed_steps).to be_empty
     end
 
-    context "with diamond dependency" do
+    context 'with diamond dependency' do
       before do
         dag.add(make_step(:a) { 1 })
         dag.add(make_step(:b, [:a]) { |x| x + 10 })
@@ -106,7 +118,7 @@ RSpec.describe Flowline::Executor::Sequential do
         dag.add(make_step(:d, %i[b c]) { |b:, c:| b + c })
       end
 
-      it "handles diamond dependencies correctly" do
+      it 'handles diamond dependencies correctly' do
         executor = described_class.new(dag)
         result = executor.execute
 
@@ -117,21 +129,21 @@ RSpec.describe Flowline::Executor::Sequential do
       end
     end
 
-    context "with errors" do
-      it "raises StepError when step fails" do
-        dag.add(make_step(:fail) { raise "boom" })
+    context 'with errors' do
+      it 'raises StepError when step fails' do
+        dag.add(make_step(:fail) { raise 'boom' })
 
         executor = described_class.new(dag)
 
         expect { executor.execute }.to raise_error(Flowline::StepError) do |error|
           expect(error.step_name).to eq(:fail)
-          expect(error.original_error.message).to eq("boom")
+          expect(error.original_error.message).to eq('boom')
         end
       end
 
-      it "includes partial results in StepError" do
+      it 'includes partial results in StepError' do
         dag.add(make_step(:a) { 1 })
-        dag.add(make_step(:b, [:a]) { |_| raise "boom" })
+        dag.add(make_step(:b, [:a]) { |_| raise 'boom' })
         dag.add(make_step(:c, [:b]) { |x| x + 1 })
 
         executor = described_class.new(dag)
@@ -142,11 +154,20 @@ RSpec.describe Flowline::Executor::Sequential do
         end
       end
 
-      it "stops execution after first failure" do
+      it 'stops execution after first failure' do
         executed = []
-        dag.add(make_step(:a) { executed << :a; 1 })
-        dag.add(make_step(:b, [:a]) { |_| executed << :b; raise "boom" })
-        dag.add(make_step(:c, [:b]) { |x| executed << :c; x })
+        dag.add(make_step(:a) do
+          executed << :a
+          1
+        end)
+        dag.add(make_step(:b, [:a]) do |_|
+          executed << :b
+          raise 'boom'
+        end)
+        dag.add(make_step(:c, [:b]) do |x|
+          executed << :c
+          x
+        end)
 
         executor = described_class.new(dag)
 
@@ -154,7 +175,7 @@ RSpec.describe Flowline::Executor::Sequential do
         expect(executed).to eq(%i[a b])
       end
 
-      it "validates DAG before execution" do
+      it 'validates DAG before execution' do
         dag.add(make_step(:a, [:missing]) { 1 })
 
         executor = described_class.new(dag)
@@ -166,8 +187,8 @@ RSpec.describe Flowline::Executor::Sequential do
 end
 
 RSpec.describe Flowline::Executor::Base do
-  describe "#execute" do
-    it "raises NotImplementedError" do
+  describe '#execute' do
+    it 'raises NotImplementedError' do
       dag = Flowline::DAG.new
       executor = described_class.new(dag)
 

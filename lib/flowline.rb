@@ -1,13 +1,13 @@
 # frozen_string_literal: true
 
-require_relative "flowline/version"
-require_relative "flowline/errors"
-require_relative "flowline/step"
-require_relative "flowline/dag"
-require_relative "flowline/result"
-require_relative "flowline/executor/base"
-require_relative "flowline/executor/sequential"
-require_relative "flowline/pipeline"
+require_relative 'flowline/version'
+require_relative 'flowline/errors'
+require_relative 'flowline/step'
+require_relative 'flowline/dag'
+require_relative 'flowline/result'
+require_relative 'flowline/executor/base'
+require_relative 'flowline/executor/sequential'
+require_relative 'flowline/pipeline'
 
 # Flowline is a Ruby dataflow and pipeline library with declarative step
 # definitions, automatic dependency resolution, and sequential execution.
@@ -30,8 +30,8 @@ module Flowline
     #
     # @yield Block containing step definitions
     # @return [Flowline::Pipeline] The defined pipeline
-    def define(&block)
-      Pipeline.new(&block)
+    def define(&)
+      Pipeline.new(&)
     end
   end
 end

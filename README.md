@@ -1,4 +1,4 @@
-# Flowline 🌊
+# Flowrb 🌊
 ## A Ruby Dataflow & Pipeline Library
 
 **Tagline:** Composable data pipelines with dependency resolution, caching, and parallel execution.
@@ -10,7 +10,7 @@
 # Project Overview
 
 ## Vision
-Flowline enables Ruby developers to build declarative data pipelines where steps are defined once, dependencies are resolved automatically, execution is parallelized where possible, and failures are handled gracefully with retries and resumption.
+Flowrb enables Ruby developers to build declarative data pipelines where steps are defined once, dependencies are resolved automatically, execution is parallelized where possible, and failures are handled gracefully with retries and resumption.
 
 ## Core Value Propositions
 1. **Declarative** - Define what, not how. Dependencies are explicit.
@@ -46,14 +46,14 @@ Flowline enables Ruby developers to build declarative data pipelines where steps
 ### Week 1: Core Architecture
 
 #### Day 1-2: Project Setup
-- [ ] Initialize gem structure (`bundle gem flowline`)
+- [ ] Initialize gem structure (`bundle gem flowrb`)
 - [ ] Setup RSpec, RuboCop, GitHub Actions CI
 - [ ] Create README with vision and planned API
 - [ ] Define module structure:
   ```
   lib/
-    flowline.rb
-    flowline/
+    flowrb.rb
+    flowrb/
       version.rb
       pipeline.rb
       step.rb
@@ -63,7 +63,7 @@ Flowline enables Ruby developers to build declarative data pipelines where steps
   ```
 
 #### Day 3-4: Step Definition
-- [ ] `Flowline::Step` class
+- [ ] `Flowrb::Step` class
   - Name (symbol)
   - Dependencies (array of step names)
   - Callable (block/proc/lambda)
@@ -73,7 +73,7 @@ Flowline enables Ruby developers to build declarative data pipelines where steps
 
 **Deliverable: Step Definition API**
 ```ruby
-step = Flowline::Step.new(:process_users) do |input|
+step = Flowrb::Step.new(:process_users) do |input|
   input[:users].map { |u| transform(u) }
 end
 
@@ -81,7 +81,7 @@ step.call(users: [...])  # => transformed array
 ```
 
 #### Day 5-7: DAG Construction
-- [ ] `Flowline::DAG` class
+- [ ] `Flowrb::DAG` class
   - Add steps with dependencies
   - Topological sort algorithm
   - Cycle detection with clear error messages
@@ -90,7 +90,7 @@ step.call(users: [...])  # => transformed array
 
 **Deliverable: DAG Building**
 ```ruby
-dag = Flowline::DAG.new
+dag = Flowrb::DAG.new
 dag.add(:fetch, -> { fetch_data })
 dag.add(:transform, -> (data) { transform(data) }, depends_on: :fetch)
 dag.add(:load, -> (data) { load(data) }, depends_on: :transform)
@@ -104,18 +104,18 @@ dag.to_mermaid    # => "graph TD\n  fetch --> transform\n  ..."
 ### Week 2: Pipeline Execution
 
 #### Day 1-2: Sequential Executor
-- [ ] `Flowline::Executor::Sequential`
+- [ ] `Flowrb::Executor::Sequential`
   - Execute steps in topological order
   - Pass outputs as inputs to dependents
   - Collect results from all steps
-- [ ] `Flowline::Result` to hold execution results
+- [ ] `Flowrb::Result` to hold execution results
   - Success/failure status per step
   - Timing information
   - Output data
 
 **Deliverable: Basic Execution**
 ```ruby
-executor = Flowline::Executor::Sequential.new(dag)
+executor = Flowrb::Executor::Sequential.new(dag)
 result = executor.run
 
 result.success?           # => true
@@ -124,13 +124,13 @@ result[:transform].duration # => 0.234
 ```
 
 #### Day 3-4: Pipeline DSL
-- [ ] `Flowline::Pipeline` class with clean DSL
-- [ ] `Flowline.define` entry point
+- [ ] `Flowrb::Pipeline` class with clean DSL
+- [ ] `Flowrb.define` entry point
 - [ ] Support for both block and class-based steps
 
 **Deliverable: Pipeline DSL**
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   step :fetch_users do
     User.all.to_a
   end
@@ -162,7 +162,7 @@ result = pipeline.run
 ```
 
 #### Day 5-6: Error Handling
-- [ ] `Flowline::StepError` with context
+- [ ] `Flowrb::StepError` with context
 - [ ] Capture step that failed + original exception
 - [ ] Partial results on failure (successful steps preserved)
 - [ ] `result.failed_step`, `result.error`
@@ -182,17 +182,17 @@ result = pipeline.run
 ### Week 3: Caching, Retries, Checkpointing
 
 #### Day 1-2: Result Caching
-- [ ] `Flowline::Cache` interface
+- [ ] `Flowrb::Cache` interface
   - `#get(key)`, `#set(key, value, ttl:)`, `#exists?(key)`
-- [ ] `Flowline::Cache::Memory` (default, in-process)
-- [ ] `Flowline::Cache::File` (persist to disk)
+- [ ] `Flowrb::Cache::Memory` (default, in-process)
+- [ ] `Flowrb::Cache::File` (persist to disk)
 - [ ] Cache key generation (step name + input hash)
 - [ ] TTL support
 - [ ] `skip_cache: true` option per step
 
 **Deliverable: Caching**
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   # Cache for 1 hour
   step :expensive_api_call, cache: { ttl: 3600 } do
     ExternalAPI.fetch_all
@@ -229,7 +229,7 @@ end
 ```
 
 #### Day 5-6: Checkpointing & Resume
-- [ ] `Flowline::Checkpoint` to save pipeline state
+- [ ] `Flowrb::Checkpoint` to save pipeline state
 - [ ] Persist completed step outputs
 - [ ] `pipeline.run(resume: true)` - skip completed steps
 - [ ] `pipeline.run(from: :step_name)` - start from specific step
@@ -250,7 +250,7 @@ result = pipeline.run(from: :transform)
 
 #### Day 7: Timeouts
 - [ ] Per-step timeout configuration
-- [ ] `Flowline::TimeoutError`
+- [ ] `Flowrb::TimeoutError`
 - [ ] Global pipeline timeout
 
 **Phase 2 Milestone:** ✅ Resilient execution with caching and recovery
@@ -263,7 +263,7 @@ result = pipeline.run(from: :transform)
 ### Week 4: Parallel Execution & Hooks
 
 #### Day 1-3: Parallel Executor
-- [ ] `Flowline::Executor::Parallel`
+- [ ] `Flowrb::Executor::Parallel`
 - [ ] Thread pool with configurable size
 - [ ] Execute independent steps concurrently
 - [ ] Thread-safe result collection
@@ -271,7 +271,7 @@ result = pipeline.run(from: :transform)
 
 **Deliverable: Parallel Execution**
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   step :fetch_users do ... end
   step :fetch_products do ... end
   step :fetch_orders do ... end
@@ -299,7 +299,7 @@ result = pipeline.run(executor: :parallel, max_threads: 4)
 
 **Deliverable: Hooks**
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   before_run do |context|
     Logger.info "Pipeline starting: #{context.pipeline_name}"
   end
@@ -319,7 +319,7 @@ end
 #### Day 6-7: Conditional Steps
 - [ ] `when:` / `unless:` conditions
 - [ ] Skip step based on runtime data
-- [ ] `Flowline::Skipped` result type
+- [ ] `Flowrb::Skipped` result type
 
 **Deliverable: Conditional Execution**
 ```ruby
@@ -335,9 +335,9 @@ end
 ### Week 5: Observability & Advanced Patterns
 
 #### Day 1-2: Execution Reporter
-- [ ] `Flowline::Reporter` interface
-- [ ] `Flowline::Reporter::Console` - pretty terminal output
-- [ ] `Flowline::Reporter::JSON` - structured logs
+- [ ] `Flowrb::Reporter` interface
+- [ ] `Flowrb::Reporter::Console` - pretty terminal output
+- [ ] `Flowrb::Reporter::JSON` - structured logs
 - [ ] Progress bar for long-running pipelines
 - [ ] Step status indicators (✓ ✗ ⏭ ⏳)
 
@@ -360,14 +360,14 @@ Elapsed: 2.07s | Steps: 3/5
 
 **Deliverable: Composition**
 ```ruby
-CommonSteps = Flowline.define do
+CommonSteps = Flowrb.define do
   step :validate do |data|
     raise "Empty!" if data.empty?
     data
   end
 end
 
-MainPipeline = Flowline.define do
+MainPipeline = Flowrb.define do
   include CommonSteps
 
   step :fetch do ... end
@@ -382,7 +382,7 @@ end
 
 **Deliverable: Parameters**
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   param :start_date, type: :date, required: true
   param :batch_size, type: :integer, default: 100
 
@@ -420,19 +420,19 @@ pipeline.run(start_date: Date.today - 7, batch_size: 500)
 - [ ] Guide: "Caching Strategies"
 
 #### Day 3: CLI Tool
-- [ ] `flowline` executable
-- [ ] `flowline run pipeline.rb` - execute a pipeline file
-- [ ] `flowline validate pipeline.rb` - check for errors
-- [ ] `flowline visualize pipeline.rb` - output DAG diagram
-- [ ] `flowline status` - show last run status (if checkpointed)
+- [ ] `flowrb` executable
+- [ ] `flowrb run pipeline.rb` - execute a pipeline file
+- [ ] `flowrb validate pipeline.rb` - check for errors
+- [ ] `flowrb visualize pipeline.rb` - output DAG diagram
+- [ ] `flowrb status` - show last run status (if checkpointed)
 
 **Deliverable: CLI**
 ```bash
-$ flowline visualize my_pipeline.rb --format=mermaid
+$ flowrb visualize my_pipeline.rb --format=mermaid
 
-$ flowline run my_pipeline.rb --param start_date=2024-01-01
+$ flowrb run my_pipeline.rb --param start_date=2024-01-01
 
-$ flowline run my_pipeline.rb --resume --verbose
+$ flowrb run my_pipeline.rb --resume --verbose
 ```
 
 #### Day 4: Integration Examples
@@ -469,7 +469,7 @@ $ flowline run my_pipeline.rb --resume --verbose
 
 ```ruby
 # Define a pipeline
-pipeline = Flowline.define(name: "my_pipeline") do
+pipeline = Flowrb.define(name: "my_pipeline") do
   # Parameters
   param :date, type: :date, required: true
   param :limit, type: :integer, default: 100
@@ -562,6 +562,6 @@ pipeline.validate!                     # check for issues
 **Week 1 Kickoff Checklist:**
 - [ ] Create GitHub repo
 - [ ] Setup gem skeleton
-- [ ] Write first spec for `Flowline::Step`
+- [ ] Write first spec for `Flowrb::Step`
 - [ ] Implement Step class
 - [ ] Start DAG implementation

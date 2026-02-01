@@ -39,9 +39,9 @@ module Flowline
     end
 
     def validate!
-      raise ArgumentError, "Step name cannot be nil" if name.nil?
-      raise ArgumentError, "Step must have a callable (block, Proc, or object responding to #call)" unless callable
-      raise ArgumentError, "Callable must respond to #call" unless callable.respond_to?(:call)
+      raise ArgumentError, 'Step name cannot be nil' if name.nil?
+      raise ArgumentError, 'Step must have a callable (block, Proc, or object responding to #call)' unless callable
+      raise ArgumentError, 'Callable must respond to #call' unless callable.respond_to?(:call)
     end
   end
 end

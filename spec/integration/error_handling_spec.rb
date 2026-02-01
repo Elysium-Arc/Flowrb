@@ -1,48 +1,48 @@
 # frozen_string_literal: true
 
-RSpec.describe "Error Handling Integration" do
-  describe "step execution errors" do
-    it "raises StepError when a step fails" do
+RSpec.describe 'Error Handling Integration' do
+  describe 'step execution errors' do
+    it 'raises StepError when a step fails' do
       pipeline = Flowline.define do
         step :ok do
-          "success"
+          'success'
         end
 
         step :fail, depends_on: :ok do |_|
-          raise "Something went wrong"
+          raise 'Something went wrong'
         end
 
         step :never_runs, depends_on: :fail do |_|
-          "unreachable"
+          'unreachable'
         end
       end
 
       expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
         expect(error.step_name).to eq(:fail)
-        expect(error.original_error.message).to eq("Something went wrong")
+        expect(error.original_error.message).to eq('Something went wrong')
       end
     end
 
-    it "provides partial results when step fails" do
+    it 'provides partial results when step fails' do
       pipeline = Flowline.define do
         step :a do
-          "result_a"
+          'result_a'
         end
 
         step :b, depends_on: :a do |_|
-          raise "boom"
+          raise 'boom'
         end
       end
 
       expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
         partial = error.partial_results
-        expect(partial[:a].output).to eq("result_a")
+        expect(partial[:a].output).to eq('result_a')
         expect(partial[:a]).to be_success
         expect(partial[:b]).to be_failed
       end
     end
 
-    it "stops execution after failure" do
+    it 'stops execution after failure' do
       executed = []
 
       pipeline = Flowline.define do
@@ -53,7 +53,7 @@ RSpec.describe "Error Handling Integration" do
 
         step :second, depends_on: :first do |_|
           executed << :second
-          raise "error"
+          raise 'error'
         end
 
         step :third, depends_on: :second do |_|
@@ -66,23 +66,23 @@ RSpec.describe "Error Handling Integration" do
       expect(executed).to eq(%i[first second])
     end
 
-    it "preserves original error type and backtrace" do
+    it 'preserves original error type and backtrace' do
       pipeline = Flowline.define do
         step :fail do
-          raise ArgumentError, "invalid argument"
+          raise ArgumentError, 'invalid argument'
         end
       end
 
       expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
         expect(error.original_error).to be_a(ArgumentError)
-        expect(error.original_error.message).to eq("invalid argument")
+        expect(error.original_error.message).to eq('invalid argument')
         expect(error.original_error.backtrace).not_to be_nil
       end
     end
   end
 
-  describe "cycle detection" do
-    it "detects self-referencing step" do
+  describe 'cycle detection' do
+    it 'detects self-referencing step' do
       pipeline = Flowline.define do
         step :self_ref, depends_on: :self_ref do
           1
@@ -92,7 +92,7 @@ RSpec.describe "Error Handling Integration" do
       expect { pipeline.run }.to raise_error(Flowline::CycleError)
     end
 
-    it "detects simple A -> B -> A cycle" do
+    it 'detects simple A -> B -> A cycle' do
       pipeline = Flowline.define do
         step :a, depends_on: :b do
           1
@@ -106,7 +106,7 @@ RSpec.describe "Error Handling Integration" do
       expect { pipeline.run }.to raise_error(Flowline::CycleError)
     end
 
-    it "detects longer cycles (A -> B -> C -> A)" do
+    it 'detects longer cycles (A -> B -> C -> A)' do
       pipeline = Flowline.define do
         step :a, depends_on: :c do
           1
@@ -124,7 +124,7 @@ RSpec.describe "Error Handling Integration" do
       expect { pipeline.run }.to raise_error(Flowline::CycleError)
     end
 
-    it "includes cycle information in error" do
+    it 'includes cycle information in error' do
       pipeline = Flowline.define do
         step :a, depends_on: :b do
           1
@@ -141,11 +141,11 @@ RSpec.describe "Error Handling Integration" do
     end
   end
 
-  describe "missing dependency detection" do
-    it "raises MissingDependencyError for unknown dependency" do
+  describe 'missing dependency detection' do
+    it 'raises MissingDependencyError for unknown dependency' do
       pipeline = Flowline.define do
         step :process, depends_on: :nonexistent do |_|
-          "result"
+          'result'
         end
       end
 
@@ -155,7 +155,7 @@ RSpec.describe "Error Handling Integration" do
       end
     end
 
-    it "raises error for partially missing dependencies" do
+    it 'raises error for partially missing dependencies' do
       pipeline = Flowline.define do
         step :exists do
           1
@@ -172,8 +172,8 @@ RSpec.describe "Error Handling Integration" do
     end
   end
 
-  describe "duplicate step detection" do
-    it "raises DuplicateStepError for duplicate step names" do
+  describe 'duplicate step detection' do
+    it 'raises DuplicateStepError for duplicate step names' do
       expect do
         Flowline.define do
           step :duplicate do
@@ -190,8 +190,8 @@ RSpec.describe "Error Handling Integration" do
     end
   end
 
-  describe "validation before run" do
-    it "validates DAG before execution" do
+  describe 'validation before run' do
+    it 'validates DAG before execution' do
       pipeline = Flowline.define do
         step :a, depends_on: :b do
           1
@@ -205,7 +205,7 @@ RSpec.describe "Error Handling Integration" do
       expect { pipeline.validate! }.to raise_error(Flowline::CycleError)
     end
 
-    it "validation returns true for valid pipeline" do
+    it 'validation returns true for valid pipeline' do
       pipeline = Flowline.define do
         step :a do
           1
@@ -220,8 +220,8 @@ RSpec.describe "Error Handling Integration" do
     end
   end
 
-  describe "error message quality" do
-    it "provides descriptive error messages for cycles" do
+  describe 'error message quality' do
+    it 'provides descriptive error messages for cycles' do
       pipeline = Flowline.define do
         step :a, depends_on: :b do
           1
@@ -233,11 +233,11 @@ RSpec.describe "Error Handling Integration" do
       end
 
       expect { pipeline.run }.to raise_error(Flowline::CycleError) do |error|
-        expect(error.message).to include("Circular dependency")
+        expect(error.message).to include('Circular dependency')
       end
     end
 
-    it "provides descriptive error messages for missing deps" do
+    it 'provides descriptive error messages for missing deps' do
       pipeline = Flowline.define do
         step :process, depends_on: :missing do |_|
           1
@@ -245,58 +245,58 @@ RSpec.describe "Error Handling Integration" do
       end
 
       expect { pipeline.run }.to raise_error(Flowline::MissingDependencyError) do |error|
-        expect(error.message).to include("missing")
-        expect(error.message).to include("does not exist")
+        expect(error.message).to include('missing')
+        expect(error.message).to include('does not exist')
       end
     end
 
-    it "provides descriptive error messages for step failures" do
+    it 'provides descriptive error messages for step failures' do
       pipeline = Flowline.define do
         step :fail do
-          raise "custom error message"
+          raise 'custom error message'
         end
       end
 
       expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
-        expect(error.message).to include("fail")
-        expect(error.message).to include("custom error message")
+        expect(error.message).to include('fail')
+        expect(error.message).to include('custom error message')
       end
     end
   end
 
-  describe "error recovery information" do
-    it "partial results contain successful step outputs" do
+  describe 'error recovery information' do
+    it 'partial results contain successful step outputs' do
       pipeline = Flowline.define do
         step :a do
-          "a_output"
+          'a_output'
         end
 
         step :b do
-          "b_output"
+          'b_output'
         end
 
-        step :c, depends_on: %i[a b] do |a:, b:|
-          raise "failed in c"
+        step :c, depends_on: %i[a b] do |_a:, _b:|
+          raise 'failed in c'
         end
       end
 
       expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
         partial = error.partial_results
-        expect(partial[:a].output).to eq("a_output")
-        expect(partial[:b].output).to eq("b_output")
+        expect(partial[:a].output).to eq('a_output')
+        expect(partial[:b].output).to eq('b_output')
         expect(partial[:c]).to be_failed
       end
     end
 
-    it "partial results include timing information" do
+    it 'partial results include timing information' do
       pipeline = Flowline.define do
         step :a do
           sleep(0.01)
-          "done"
+          'done'
         end
 
         step :b, depends_on: :a do |_|
-          raise "boom"
+          raise 'boom'
         end
       end
 

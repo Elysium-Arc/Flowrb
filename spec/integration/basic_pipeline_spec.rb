@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-RSpec.describe "Basic Pipeline Integration" do
-  describe "ETL-style pipeline" do
-    it "executes fetch -> transform -> load pipeline" do
+RSpec.describe 'Basic Pipeline Integration' do
+  describe 'ETL-style pipeline' do
+    it 'executes fetch -> transform -> load pipeline' do
       pipeline = Flowline.define do
         step :fetch do
           [1, 2, 3, 4, 5]
@@ -12,9 +12,7 @@ RSpec.describe "Basic Pipeline Integration" do
           data.map { |n| n * 2 }
         end
 
-        step :load, depends_on: :transform do |data|
-          data.sum
-        end
+        step :load, depends_on: :transform, &:sum
       end
 
       result = pipeline.run
@@ -26,8 +24,8 @@ RSpec.describe "Basic Pipeline Integration" do
     end
   end
 
-  describe "fan-out pipeline" do
-    it "executes one-to-many dependencies" do
+  describe 'fan-out pipeline' do
+    it 'executes one-to-many dependencies' do
       pipeline = Flowline.define do
         step :fetch do
           { users: [1, 2, 3], products: [10, 20] }
@@ -50,8 +48,8 @@ RSpec.describe "Basic Pipeline Integration" do
     end
   end
 
-  describe "fan-in pipeline" do
-    it "executes many-to-one dependencies with keyword arguments" do
+  describe 'fan-in pipeline' do
+    it 'executes many-to-one dependencies with keyword arguments' do
       pipeline = Flowline.define do
         step :fetch_users do
           %w[alice bob]
@@ -76,8 +74,8 @@ RSpec.describe "Basic Pipeline Integration" do
     end
   end
 
-  describe "diamond dependency pattern" do
-    it "correctly handles diamond dependencies (A -> B, A -> C, B -> D, C -> D)" do
+  describe 'diamond dependency pattern' do
+    it 'correctly handles diamond dependencies (A -> B, A -> C, B -> D, C -> D)' do
       pipeline = Flowline.define do
         step :source do
           100
@@ -106,8 +104,8 @@ RSpec.describe "Basic Pipeline Integration" do
     end
   end
 
-  describe "complex multi-level pipeline" do
-    it "handles multiple levels of dependencies" do
+  describe 'complex multi-level pipeline' do
+    it 'handles multiple levels of dependencies' do
       pipeline = Flowline.define do
         step :level1 do
           1
@@ -141,26 +139,24 @@ RSpec.describe "Basic Pipeline Integration" do
     end
   end
 
-  describe "initial input" do
-    it "passes initial input to root steps" do
+  describe 'initial input' do
+    it 'passes initial input to root steps' do
       pipeline = Flowline.define do
-        step :uppercase do |text|
-          text.upcase
-        end
+        step :uppercase, &:upcase
 
         step :add_exclaim, depends_on: :uppercase do |text|
           "#{text}!"
         end
       end
 
-      result = pipeline.run(initial_input: "hello")
+      result = pipeline.run(initial_input: 'hello')
 
       expect(result).to be_success
-      expect(result[:uppercase].output).to eq("HELLO")
-      expect(result[:add_exclaim].output).to eq("HELLO!")
+      expect(result[:uppercase].output).to eq('HELLO')
+      expect(result[:add_exclaim].output).to eq('HELLO!')
     end
 
-    it "passes initial input to multiple roots" do
+    it 'passes initial input to multiple roots' do
       pipeline = Flowline.define do
         step :double do |n|
           n * 2
@@ -183,15 +179,15 @@ RSpec.describe "Basic Pipeline Integration" do
     end
   end
 
-  describe "nil outputs" do
-    it "handles nil output from steps" do
+  describe 'nil outputs' do
+    it 'handles nil output from steps' do
       pipeline = Flowline.define do
         step :return_nil do
           nil
         end
 
         step :check_nil, depends_on: :return_nil do |value|
-          value.nil? ? "received nil" : "received something"
+          value.nil? ? 'received nil' : 'received something'
         end
       end
 
@@ -199,12 +195,12 @@ RSpec.describe "Basic Pipeline Integration" do
 
       expect(result).to be_success
       expect(result[:return_nil].output).to be_nil
-      expect(result[:check_nil].output).to eq("received nil")
+      expect(result[:check_nil].output).to eq('received nil')
     end
   end
 
-  describe "empty pipeline" do
-    it "runs successfully with no steps" do
+  describe 'empty pipeline' do
+    it 'runs successfully with no steps' do
       pipeline = Flowline.define {}
 
       result = pipeline.run
@@ -214,27 +210,27 @@ RSpec.describe "Basic Pipeline Integration" do
     end
   end
 
-  describe "single step pipeline" do
-    it "runs a single step with no dependencies" do
+  describe 'single step pipeline' do
+    it 'runs a single step with no dependencies' do
       pipeline = Flowline.define do
         step :only_one do
-          "only result"
+          'only result'
         end
       end
 
       result = pipeline.run
 
       expect(result).to be_success
-      expect(result[:only_one].output).to eq("only result")
+      expect(result[:only_one].output).to eq('only result')
     end
   end
 
-  describe "result inspection" do
-    it "provides duration information" do
+  describe 'result inspection' do
+    it 'provides duration information' do
       pipeline = Flowline.define do
         step :slow do
           sleep(0.01)
-          "done"
+          'done'
         end
       end
 
@@ -245,7 +241,7 @@ RSpec.describe "Basic Pipeline Integration" do
       expect(result[:slow].started_at).to be_a(Time)
     end
 
-    it "provides output access via outputs method" do
+    it 'provides output access via outputs method' do
       pipeline = Flowline.define do
         step :a do
           1
@@ -262,8 +258,8 @@ RSpec.describe "Basic Pipeline Integration" do
     end
   end
 
-  describe "mermaid diagram generation" do
-    it "generates correct mermaid diagram" do
+  describe 'mermaid diagram generation' do
+    it 'generates correct mermaid diagram' do
       pipeline = Flowline.define do
         step :fetch do
           []
@@ -280,14 +276,14 @@ RSpec.describe "Basic Pipeline Integration" do
 
       mermaid = pipeline.to_mermaid
 
-      expect(mermaid).to include("graph TD")
-      expect(mermaid).to include("fetch --> process")
-      expect(mermaid).to include("process --> save")
+      expect(mermaid).to include('graph TD')
+      expect(mermaid).to include('fetch --> process')
+      expect(mermaid).to include('process --> save')
     end
   end
 
-  describe "validation" do
-    it "can validate before running" do
+  describe 'validation' do
+    it 'can validate before running' do
       pipeline = Flowline.define do
         step :a do
           1

@@ -1,35 +1,35 @@
 # frozen_string_literal: true
 
 RSpec.describe Flowline::Error do
-  it "is a StandardError" do
+  it 'is a StandardError' do
     expect(described_class.superclass).to eq(StandardError)
   end
 end
 
 RSpec.describe Flowline::CycleError do
-  it "is a Flowline::Error" do
+  it 'is a Flowline::Error' do
     expect(described_class.superclass).to eq(Flowline::Error)
   end
 
-  it "accepts a cycle parameter" do
-    error = described_class.new("Cycle detected", cycle: %i[a b a])
+  it 'accepts a cycle parameter' do
+    error = described_class.new('Cycle detected', cycle: %i[a b a])
     expect(error.cycle).to eq(%i[a b a])
   end
 
-  it "has a default message" do
+  it 'has a default message' do
     error = described_class.new
-    expect(error.message).to eq("Circular dependency detected")
+    expect(error.message).to eq('Circular dependency detected')
   end
 end
 
 RSpec.describe Flowline::MissingDependencyError do
-  it "is a Flowline::Error" do
+  it 'is a Flowline::Error' do
     expect(described_class.superclass).to eq(Flowline::Error)
   end
 
-  it "accepts step_name and missing_dependency parameters" do
+  it 'accepts step_name and missing_dependency parameters' do
     error = described_class.new(
-      "Missing dep",
+      'Missing dep',
       step_name: :process,
       missing_dependency: :fetch
     )
@@ -39,27 +39,27 @@ RSpec.describe Flowline::MissingDependencyError do
 end
 
 RSpec.describe Flowline::DuplicateStepError do
-  it "is a Flowline::Error" do
+  it 'is a Flowline::Error' do
     expect(described_class.superclass).to eq(Flowline::Error)
   end
 
-  it "accepts step_name parameter" do
-    error = described_class.new("Duplicate", step_name: :fetch)
+  it 'accepts step_name parameter' do
+    error = described_class.new('Duplicate', step_name: :fetch)
     expect(error.step_name).to eq(:fetch)
   end
 end
 
 RSpec.describe Flowline::StepError do
-  it "is a Flowline::Error" do
+  it 'is a Flowline::Error' do
     expect(described_class.superclass).to eq(Flowline::Error)
   end
 
-  it "accepts step_name, original_error, and partial_results" do
-    original = StandardError.new("boom")
+  it 'accepts step_name, original_error, and partial_results' do
+    original = StandardError.new('boom')
     partial = Flowline::Result.new
 
     error = described_class.new(
-      "Step failed",
+      'Step failed',
       step_name: :process,
       original_error: original,
       partial_results: partial

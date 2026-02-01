@@ -4,22 +4,22 @@ RSpec.describe Flowline::DAG do
   let(:dag) { described_class.new }
 
   def make_step(name, deps = [])
-    Flowline::Step.new(name, depends_on: deps) { "result" }
+    Flowline::Step.new(name, depends_on: deps) { 'result' }
   end
 
-  describe "#add" do
-    it "adds a step to the DAG" do
+  describe '#add' do
+    it 'adds a step to the DAG' do
       step = make_step(:fetch)
       dag.add(step)
       expect(dag[:fetch]).to eq(step)
     end
 
-    it "returns self for chaining" do
+    it 'returns self for chaining' do
       step = make_step(:fetch)
       expect(dag.add(step)).to eq(dag)
     end
 
-    it "raises DuplicateStepError for duplicate step names" do
+    it 'raises DuplicateStepError for duplicate step names' do
       dag.add(make_step(:fetch))
       expect { dag.add(make_step(:fetch)) }.to raise_error(
         Flowline::DuplicateStepError,
@@ -27,7 +27,7 @@ RSpec.describe Flowline::DAG do
       )
     end
 
-    it "includes step name in DuplicateStepError" do
+    it 'includes step name in DuplicateStepError' do
       dag.add(make_step(:fetch))
       expect { dag.add(make_step(:fetch)) }.to raise_error do |error|
         expect(error.step_name).to eq(:fetch)
@@ -35,26 +35,26 @@ RSpec.describe Flowline::DAG do
     end
   end
 
-  describe "#[]" do
-    it "retrieves a step by name" do
+  describe '#[]' do
+    it 'retrieves a step by name' do
       step = make_step(:fetch)
       dag.add(step)
       expect(dag[:fetch]).to eq(step)
     end
 
-    it "accepts string keys and converts to symbol" do
+    it 'accepts string keys and converts to symbol' do
       step = make_step(:fetch)
       dag.add(step)
-      expect(dag["fetch"]).to eq(step)
+      expect(dag['fetch']).to eq(step)
     end
 
-    it "returns nil for unknown steps" do
+    it 'returns nil for unknown steps' do
       expect(dag[:unknown]).to be_nil
     end
   end
 
-  describe "#steps" do
-    it "returns all steps" do
+  describe '#steps' do
+    it 'returns all steps' do
       step1 = make_step(:a)
       step2 = make_step(:b)
       dag.add(step1)
@@ -63,35 +63,35 @@ RSpec.describe Flowline::DAG do
     end
   end
 
-  describe "#step_names" do
-    it "returns all step names" do
+  describe '#step_names' do
+    it 'returns all step names' do
       dag.add(make_step(:a))
       dag.add(make_step(:b))
       expect(dag.step_names).to contain_exactly(:a, :b)
     end
   end
 
-  describe "#empty?" do
-    it "returns true for empty DAG" do
+  describe '#empty?' do
+    it 'returns true for empty DAG' do
       expect(dag).to be_empty
     end
 
-    it "returns false for non-empty DAG" do
+    it 'returns false for non-empty DAG' do
       dag.add(make_step(:fetch))
       expect(dag).not_to be_empty
     end
   end
 
-  describe "#size" do
-    it "returns the number of steps" do
+  describe '#size' do
+    it 'returns the number of steps' do
       dag.add(make_step(:a))
       dag.add(make_step(:b))
       expect(dag.size).to eq(2)
     end
   end
 
-  describe "#sorted_steps" do
-    it "returns steps in topological order" do
+  describe '#sorted_steps' do
+    it 'returns steps in topological order' do
       dag.add(make_step(:a))
       dag.add(make_step(:b, [:a]))
       dag.add(make_step(:c, [:b]))
@@ -100,7 +100,7 @@ RSpec.describe Flowline::DAG do
       expect(names).to eq(%i[a b c])
     end
 
-    it "handles multiple roots" do
+    it 'handles multiple roots' do
       dag.add(make_step(:a))
       dag.add(make_step(:b))
       dag.add(make_step(:c, %i[a b]))
@@ -110,7 +110,7 @@ RSpec.describe Flowline::DAG do
       expect(names[0..1]).to contain_exactly(:a, :b)
     end
 
-    it "handles diamond dependencies" do
+    it 'handles diamond dependencies' do
       dag.add(make_step(:a))
       dag.add(make_step(:b, [:a]))
       dag.add(make_step(:c, [:a]))
@@ -123,24 +123,24 @@ RSpec.describe Flowline::DAG do
       expect(names.index(:c)).to be < names.index(:d)
     end
 
-    it "returns empty array for empty DAG" do
+    it 'returns empty array for empty DAG' do
       expect(dag.sorted_steps).to eq([])
     end
   end
 
-  describe "#validate!" do
-    it "returns true for valid DAG" do
+  describe '#validate!' do
+    it 'returns true for valid DAG' do
       dag.add(make_step(:a))
       dag.add(make_step(:b, [:a]))
       expect(dag.validate!).to be true
     end
 
-    it "raises MissingDependencyError for unknown dependency" do
+    it 'raises MissingDependencyError for unknown dependency' do
       dag.add(make_step(:process, [:unknown]))
       expect { dag.validate! }.to raise_error(Flowline::MissingDependencyError)
     end
 
-    it "includes details in MissingDependencyError" do
+    it 'includes details in MissingDependencyError' do
       dag.add(make_step(:process, [:unknown]))
       expect { dag.validate! }.to raise_error do |error|
         expect(error.step_name).to eq(:process)
@@ -148,26 +148,26 @@ RSpec.describe Flowline::DAG do
       end
     end
 
-    context "with cycles" do
-      it "raises CycleError for self-referencing step" do
+    context 'with cycles' do
+      it 'raises CycleError for self-referencing step' do
         dag.add(make_step(:a, [:a]))
         expect { dag.validate! }.to raise_error(Flowline::CycleError)
       end
 
-      it "raises CycleError for A -> B -> A cycle" do
+      it 'raises CycleError for A -> B -> A cycle' do
         dag.add(make_step(:a, [:b]))
         dag.add(make_step(:b, [:a]))
         expect { dag.validate! }.to raise_error(Flowline::CycleError)
       end
 
-      it "raises CycleError for longer cycles" do
+      it 'raises CycleError for longer cycles' do
         dag.add(make_step(:a, [:c]))
         dag.add(make_step(:b, [:a]))
         dag.add(make_step(:c, [:b]))
         expect { dag.validate! }.to raise_error(Flowline::CycleError)
       end
 
-      it "includes cycle information in error" do
+      it 'includes cycle information in error' do
         dag.add(make_step(:a, [:b]))
         dag.add(make_step(:b, [:a]))
         expect { dag.validate! }.to raise_error do |error|
@@ -177,35 +177,35 @@ RSpec.describe Flowline::DAG do
     end
   end
 
-  describe "#to_mermaid" do
-    it "returns mermaid diagram for empty DAG" do
-      expect(dag.to_mermaid).to include("graph TD")
-      expect(dag.to_mermaid).to include("empty[Empty Pipeline]")
+  describe '#to_mermaid' do
+    it 'returns mermaid diagram for empty DAG' do
+      expect(dag.to_mermaid).to include('graph TD')
+      expect(dag.to_mermaid).to include('empty[Empty Pipeline]')
     end
 
-    it "returns mermaid diagram with steps" do
+    it 'returns mermaid diagram with steps' do
       dag.add(make_step(:a))
       dag.add(make_step(:b, [:a]))
 
       mermaid = dag.to_mermaid
-      expect(mermaid).to include("graph TD")
-      expect(mermaid).to include("a --> b")
+      expect(mermaid).to include('graph TD')
+      expect(mermaid).to include('a --> b')
     end
 
-    it "shows standalone steps" do
+    it 'shows standalone steps' do
       dag.add(make_step(:standalone))
       mermaid = dag.to_mermaid
-      expect(mermaid).to include("standalone")
+      expect(mermaid).to include('standalone')
     end
 
-    it "shows multiple dependencies" do
+    it 'shows multiple dependencies' do
       dag.add(make_step(:a))
       dag.add(make_step(:b))
       dag.add(make_step(:c, %i[a b]))
 
       mermaid = dag.to_mermaid
-      expect(mermaid).to include("a --> c")
-      expect(mermaid).to include("b --> c")
+      expect(mermaid).to include('a --> c')
+      expect(mermaid).to include('b --> c')
     end
   end
 end

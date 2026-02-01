@@ -6,8 +6,8 @@ AllCops:
   NewCops: enable
   SuggestExtensions: false
   Exclude:
-    - "vendor/**/*"
-    - "bin/**/*"
+    - 'vendor/**/*'
+    - 'bin/**/*'
 
 Style/Documentation:
   Enabled: false
@@ -15,31 +15,62 @@ Style/Documentation:
 Style/FrozenStringLiteralComment:
   Enabled: true
 
+Style/MultilineBlockChain:
+  Enabled: false
+
 Metrics/BlockLength:
   Exclude:
-    - "spec/**/*"
-    - "flowline.gemspec"
+    - 'spec/**/*'
+    - 'flowline.gemspec'
 
 Metrics/MethodLength:
-  Max: 20
+  Max: 30
 
 Metrics/AbcSize:
-  Max: 20
+  Max: 30
+
+Metrics/ClassLength:
+  Max: 150
+
+Metrics/ParameterLists:
+  Max: 6
 
 Layout/LineLength:
   Max: 120
   Exclude:
-    - "spec/**/*"
+    - 'spec/**/*'
+    - 'flowline.gemspec'
+
+Naming/PredicateMethod:
+  Enabled: false
+
+Naming/VariableNumber:
+  Exclude:
+    - 'spec/**/*'
+
+Naming/MethodParameterName:
+  Exclude:
+    - 'spec/**/*'
+
+RSpec/SpecFilePathFormat:
+  Enabled: false
+
+Lint/EmptyBlock:
+  Exclude:
+    - 'spec/**/*'
 
 RSpec/MultipleExpectations:
   Enabled: false
 
+RSpec/MultipleDescribes:
+  Enabled: false
+
 RSpec/ExampleLength:
-  Max: 15
+  Enabled: false
 
 RSpec/NestedGroups:
   Max: 4
 
 RSpec/DescribeClass:
   Exclude:
-    - "spec/integration/**/*"
+    - 'spec/integration/**/*'

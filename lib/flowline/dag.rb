@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "tsort"
+require 'tsort'
 
 module Flowline
   # Directed Acyclic Graph implementation using Ruby's TSort.
@@ -13,10 +13,12 @@ module Flowline
     end
 
     def add(step)
-      raise DuplicateStepError.new(
-        "Step '#{step.name}' already exists",
-        step_name: step.name
-      ) if @steps.key?(step.name)
+      if @steps.key?(step.name)
+        raise DuplicateStepError.new(
+          "Step '#{step.name}' already exists",
+          step_name: step.name
+        )
+      end
 
       @steps[step.name] = step
       self
@@ -54,10 +56,10 @@ module Flowline
     end
 
     def to_mermaid
-      lines = ["graph TD"]
+      lines = ['graph TD']
 
       if empty?
-        lines << "  empty[Empty Pipeline]"
+        lines << '  empty[Empty Pipeline]'
         return lines.join("\n")
       end
 
@@ -77,28 +79,36 @@ module Flowline
     private
 
     # TSort interface: iterate over all nodes
-    def tsort_each_node(&block)
-      @steps.each_key(&block)
+    def tsort_each_node(&)
+      @steps.each_key(&)
     end
 
     # TSort interface: iterate over dependencies of a node
-    def tsort_each_child(node, &block)
+    def tsort_each_child(node, &)
       step = @steps[node]
       return unless step
 
-      step.dependencies.each(&block)
+      step.dependencies.each(&)
     end
 
     def validate_dependencies!
       @steps.each_value do |step|
         step.dependencies.each do |dep|
-          unless @steps.key?(dep)
-            raise MissingDependencyError.new(
-              "Step '#{step.name}' depends on '#{dep}' which does not exist",
-              step_name: step.name,
-              missing_dependency: dep
+          # Check for self-reference
+          if dep == step.name
+            raise CycleError.new(
+              "Circular dependency detected: #{step.name} -> #{step.name}",
+              cycle: [step.name, step.name]
             )
           end
+
+          next if @steps.key?(dep)
+
+          raise MissingDependencyError.new(
+            "Step '#{step.name}' depends on '#{dep}' which does not exist",
+            step_name: step.name,
+            missing_dependency: dep
+          )
         end
       end
     end
@@ -114,7 +124,7 @@ module Flowline
       )
     end
 
-    def extract_cycle_from_error(error)
+    def extract_cycle_from_error(_error)
       # TSort::Cyclic message format: "topological sort failed: ... (TSort::Cyclic)"
       # Try to detect the cycle by finding strongly connected components
       detect_cycle
@@ -127,9 +137,7 @@ module Flowline
       cycle = []
 
       @steps.each_key do |name|
-        if detect_cycle_dfs(name, visited, rec_stack, cycle)
-          return cycle.reverse
-        end
+        return cycle.reverse if detect_cycle_dfs(name, visited, rec_stack, cycle)
       end
 
       []
@@ -145,9 +153,8 @@ module Flowline
       step.dependencies.each do |dep|
         if !visited[dep]
           cycle << node
-          if detect_cycle_dfs(dep, visited, rec_stack, cycle)
-            return true
-          end
+          return true if detect_cycle_dfs(dep, visited, rec_stack, cycle)
+
           cycle.pop
         elsif rec_stack[dep]
           cycle << node

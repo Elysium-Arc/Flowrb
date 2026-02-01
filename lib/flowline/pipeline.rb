@@ -5,10 +5,10 @@ module Flowline
   class Pipeline
     attr_reader :dag
 
-    def initialize(&block)
+    def initialize(&)
       @dag = DAG.new
       @executor_class = Executor::Sequential
-      instance_eval(&block) if block_given?
+      instance_eval(&) if block_given?
     end
 
     def step(name, depends_on: [], **options, &block)
