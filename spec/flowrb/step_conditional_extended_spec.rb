@@ -15,7 +15,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Prefect-style merge patterns' do
     it 'returns first non-skipped result in fan-in (merge pattern)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :condition do
           :path_a
         end
@@ -47,7 +47,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles all branches skipped in merge' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :condition do
           :none
         end
@@ -73,7 +73,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'supports switch-like branching with multiple conditions' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :get_type do
           'premium'
         end
@@ -106,7 +106,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles nested conditional branches' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :outer_condition do
           { run_inner: true, inner_path: :a }
         end
@@ -142,7 +142,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Airflow-style trigger rule patterns' do
     it 'simulates none_failed_min_one_success: runs if at least one upstream succeeds' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :branch_decider do
           :path_a
         end
@@ -170,7 +170,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'simulates branching with downstream task continuation' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :start do
           { use_cache: true }
         end
@@ -204,7 +204,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     it 'handles skip propagation through multiple levels' do
       execution_order = []
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :gate, if: -> { false } do
           execution_order << :gate
           'gate output'
@@ -236,7 +236,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles partial skip propagation (some branches continue)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :source do
           { enable_a: false, enable_b: true }
         end
@@ -277,7 +277,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Luigi-style dependency status patterns' do
     it 'allows downstream to check if dependency was skipped vs executed with nil' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :maybe_skip, if: -> { false } do
           nil # Would return nil if executed
         end
@@ -297,7 +297,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles optional dependencies pattern' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :required_data do
           { id: 1, name: 'test' }
         end
@@ -320,7 +320,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'supports graceful degradation pattern' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :primary_source, if: -> { false } do
           { source: 'primary', data: [1, 2, 3] }
         end
@@ -348,7 +348,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Celery-style chain patterns' do
     it 'supports breaking chain based on intermediate result' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :validate do
           { valid: false, reason: 'missing required field' }
         end
@@ -377,7 +377,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     it 'supports immutable-like steps that ignore upstream output' do
       counter = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :producer do
           counter += 1
           "produced #{counter}"
@@ -408,7 +408,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Diamond pattern with conditionals' do
     it 'handles diamond with conditional branches' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :root do
           { enable_left: true, enable_right: false }
         end
@@ -434,7 +434,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles multiple diamonds with mixed conditions' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :config do
           { diamond1: { left: true, right: true }, diamond2: { left: false, right: true } }
         end
@@ -487,7 +487,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Fan-out/Fan-in patterns' do
     it 'handles selective fan-out based on data' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :splitter do
           { items: [1, 2, 3, 4, 5], process_even: true, process_odd: false }
         end
@@ -515,7 +515,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles dynamic fan-out count' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :config do
           { workers: 3 }
         end
@@ -556,7 +556,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Data-driven conditional execution' do
     it 'handles type-based routing' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :get_request do
           { type: 'json', payload: '{"key": "value"}' }
         end
@@ -589,7 +589,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles threshold-based conditions' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :get_metrics do
           { cpu: 75, memory: 45, disk: 90 }
         end
@@ -621,7 +621,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles list-based conditional processing' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :get_items do
           [
             { id: 1, status: 'pending' },
@@ -661,7 +661,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     it 'supports error recovery with conditional fallback' do
       primary_failed = true
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :primary, if: -> { !primary_failed } do
           'primary result'
         end
@@ -685,7 +685,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     it 'supports circuit breaker pattern' do
       circuit_open = true
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :check_circuit do
           { open: circuit_open }
         end
@@ -716,7 +716,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Parallel execution with conditions' do
     it 'handles parallel conditional branches correctly' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :config do
           { run_a: true, run_b: true, run_c: false }
         end
@@ -753,7 +753,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
       counter = 0
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :init do
           10
         end
@@ -795,7 +795,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
         enable_notifications: false
       }
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :load_config do
           feature_flags
         end
@@ -839,7 +839,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
       # Simulate A/B test assignment
       user_bucket = 'B'
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :get_user do
           { id: 123, bucket: user_bucket }
         end
@@ -875,7 +875,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'implements ETL pipeline with optional transformations' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :extract do
           {
             source: 'database',
@@ -915,7 +915,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
   # ============================================================================
   describe 'Additional edge cases' do
     it 'handles condition returning 0 (falsy in some languages, truthy in Ruby)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :zero_condition, if: -> { 0 } do
           'zero is truthy in Ruby'
         end
@@ -928,7 +928,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles condition returning empty string (truthy in Ruby)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :empty_string_condition, if: -> { '' } do
           'empty string is truthy in Ruby'
         end
@@ -940,7 +940,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles condition returning empty array (truthy in Ruby)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :empty_array_condition, if: -> { [] } do
           'empty array is truthy in Ruby'
         end
@@ -952,7 +952,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles deeply nested hash access in condition' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :nested_data do
           { level1: { level2: { level3: { enabled: true } } } }
         end
@@ -968,7 +968,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles condition with method call on input' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :get_string do
           'hello world'
         end
@@ -989,7 +989,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles unless with complex boolean expression' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :get_user do
           { admin: false, verified: true, banned: false }
         end
@@ -1007,7 +1007,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles all steps skipped in pipeline' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a, if: -> { false } do
           'a'
         end
@@ -1029,7 +1029,7 @@ RSpec.describe 'Step Conditional Execution - Extended Patterns' do
     end
 
     it 'handles condition that checks step result type' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :producer do
           { type: :hash, data: { key: 'value' } }
         end

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-module Flowline
-  # Base error class for all Flowline errors
+module Flowrb
+  # Base error class for all Flowrb errors
   class Error < StandardError; end
 
   # Raised when a circular dependency is detected in the DAG

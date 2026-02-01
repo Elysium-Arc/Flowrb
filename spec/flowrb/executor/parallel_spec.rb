@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::Executor::Parallel do
-  let(:dag) { Flowline::DAG.new }
+RSpec.describe Flowrb::Executor::Parallel do
+  let(:dag) { Flowrb::DAG.new }
   let(:executor) { described_class.new(dag) }
 
   def make_step(name, deps = [], &block)
     block ||= proc { "result_#{name}" }
-    Flowline::Step.new(name, depends_on: deps, &block)
+    Flowrb::Step.new(name, depends_on: deps, &block)
   end
 
   describe '#execute' do
@@ -103,7 +103,7 @@ RSpec.describe Flowline::Executor::Parallel do
       it 'raises StepError when step fails' do
         dag.add(make_step(:fail) { raise 'boom' })
 
-        expect { executor.execute }.to raise_error(Flowline::StepError) do |error|
+        expect { executor.execute }.to raise_error(Flowrb::StepError) do |error|
           expect(error.step_name).to eq(:fail)
           expect(error.original_error.message).to eq('boom')
         end
@@ -113,7 +113,7 @@ RSpec.describe Flowline::Executor::Parallel do
         dag.add(make_step(:ok) { 'success' })
         dag.add(make_step(:fail, [:ok]) { raise 'boom' })
 
-        expect { executor.execute }.to raise_error(Flowline::StepError) do |error|
+        expect { executor.execute }.to raise_error(Flowrb::StepError) do |error|
           expect(error.partial_results[:ok].output).to eq('success')
         end
       end
@@ -137,7 +137,7 @@ RSpec.describe Flowline::Executor::Parallel do
           'c'
         end)
 
-        expect { executor.execute }.to raise_error(Flowline::StepError)
+        expect { executor.execute }.to raise_error(Flowrb::StepError)
         expect(executed).not_to include(:c)
       end
     end

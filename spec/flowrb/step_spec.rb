@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::Step do
+RSpec.describe Flowrb::Step do
   describe '#initialize' do
     it 'creates a step with a block' do
       step = described_class.new(:fetch) { 'result' }
@@ -107,7 +107,7 @@ RSpec.describe Flowline::Step do
   describe '#inspect' do
     it 'returns detailed inspection' do
       step = described_class.new(:process, depends_on: [:fetch]) { 'result' }
-      expect(step.inspect).to eq('#<Flowline::Step name=:process dependencies=[:fetch]>')
+      expect(step.inspect).to eq('#<Flowrb::Step name=:process dependencies=[:fetch]>')
     end
   end
 

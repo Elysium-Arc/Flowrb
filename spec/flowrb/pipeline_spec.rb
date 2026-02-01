@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::Pipeline do
+RSpec.describe Flowrb::Pipeline do
   describe '#initialize' do
     it 'creates an empty pipeline' do
       pipeline = described_class.new
@@ -129,7 +129,7 @@ RSpec.describe Flowline::Pipeline do
         end
       end
 
-      expect { pipeline.validate! }.to raise_error(Flowline::CycleError)
+      expect { pipeline.validate! }.to raise_error(Flowrb::CycleError)
     end
 
     it 'raises MissingDependencyError for unknown dependencies' do
@@ -139,7 +139,7 @@ RSpec.describe Flowline::Pipeline do
         end
       end
 
-      expect { pipeline.validate! }.to raise_error(Flowline::MissingDependencyError)
+      expect { pipeline.validate! }.to raise_error(Flowrb::MissingDependencyError)
     end
   end
 
@@ -217,7 +217,7 @@ RSpec.describe Flowline::Pipeline do
   end
 end
 
-RSpec.describe Flowline do
+RSpec.describe Flowrb do
   describe '.define' do
     it 'creates a pipeline' do
       pipeline = described_class.define do
@@ -226,7 +226,7 @@ RSpec.describe Flowline do
         end
       end
 
-      expect(pipeline).to be_a(Flowline::Pipeline)
+      expect(pipeline).to be_a(Flowrb::Pipeline)
       expect(pipeline[:fetch]).not_to be_nil
     end
   end

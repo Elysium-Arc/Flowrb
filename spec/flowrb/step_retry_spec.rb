@@ -5,7 +5,7 @@ RSpec.describe 'Step Retries' do
     it 'retries failed step up to specified count' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :flaky, retries: 3 do
           attempts += 1
           raise 'failed' if attempts < 3
@@ -23,14 +23,14 @@ RSpec.describe 'Step Retries' do
     it 'fails after exhausting all retries' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :always_fails, retries: 3 do
           attempts += 1
           raise 'permanent failure'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
         expect(error.step_name).to eq(:always_fails)
         expect(error.original_error.message).to eq('permanent failure')
       end
@@ -40,21 +40,21 @@ RSpec.describe 'Step Retries' do
     it 'does not retry when retries is 0' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :no_retry, retries: 0 do
           attempts += 1
           raise 'failed'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowline::StepError)
+      expect { pipeline.run }.to raise_error(Flowrb::StepError)
       expect(attempts).to eq(1)
     end
 
     it 'does not retry successful steps' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :succeeds, retries: 3 do
           attempts += 1
           'success'
@@ -70,7 +70,7 @@ RSpec.describe 'Step Retries' do
       attempts = { a: 0, b: 0 }
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :flaky_a, retries: 2 do
           mutex.synchronize { attempts[:a] += 1 }
           raise 'fail a' if attempts[:a] < 2
@@ -98,7 +98,7 @@ RSpec.describe 'Step Retries' do
       attempts = 0
       timestamps = []
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :delayed_retry, retries: 2, retry_delay: 0.1 do
           timestamps << Time.now
           attempts += 1
@@ -123,7 +123,7 @@ RSpec.describe 'Step Retries' do
       attempts = 0
       timestamps = []
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :no_delay, retries: 2 do
           timestamps << Time.now
           attempts += 1
@@ -148,7 +148,7 @@ RSpec.describe 'Step Retries' do
       attempts = 0
       timestamps = []
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :backoff_retry, retries: 3, retry_delay: 0.05, retry_backoff: :exponential do
           timestamps << Time.now
           attempts += 1
@@ -176,7 +176,7 @@ RSpec.describe 'Step Retries' do
       attempts = 0
       timestamps = []
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :linear_retry, retries: 3, retry_delay: 0.05, retry_backoff: :linear do
           timestamps << Time.now
           attempts += 1
@@ -204,7 +204,7 @@ RSpec.describe 'Step Retries' do
     it 'only retries when condition is met' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :conditional_retry, retries: 3, retry_if: ->(error) { error.is_a?(IOError) } do
           attempts += 1
           raise IOError, 'transient' if attempts < 3
@@ -221,14 +221,14 @@ RSpec.describe 'Step Retries' do
     it 'does not retry when condition is not met' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :no_retry_condition, retries: 3, retry_if: ->(error) { error.is_a?(IOError) } do
           attempts += 1
           raise ArgumentError, 'permanent'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
         expect(error.original_error).to be_a(ArgumentError)
       end
       expect(attempts).to eq(1) # No retries for ArgumentError
@@ -239,7 +239,7 @@ RSpec.describe 'Step Retries' do
     it 'includes retry count in step result' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :tracked_retries, retries: 2 do
           attempts += 1
           raise 'failed' if attempts < 3
@@ -253,7 +253,7 @@ RSpec.describe 'Step Retries' do
     end
 
     it 'records zero retries for successful first attempt' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :first_try, retries: 3 do
           'immediate success'
         end

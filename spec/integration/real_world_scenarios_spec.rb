@@ -3,7 +3,7 @@
 RSpec.describe 'Real World Scenarios' do
   describe 'user registration pipeline' do
     it 'processes user registration with validation and notification' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :validate_input do |input|
           errors = []
           errors << 'Email required' if input[:email].nil? || input[:email].empty?
@@ -59,7 +59,7 @@ RSpec.describe 'Real World Scenarios' do
     end
 
     it 'fails gracefully on validation error' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :validate do |input|
           raise ArgumentError, 'Email is required' if input[:email].nil?
 
@@ -67,7 +67,7 @@ RSpec.describe 'Real World Scenarios' do
         end
       end
 
-      expect { pipeline.run(initial_input: { name: 'Test' }) }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run(initial_input: { name: 'Test' }) }.to raise_error(Flowrb::StepError) do |error|
         expect(error.original_error).to be_a(ArgumentError)
         expect(error.original_error.message).to eq('Email is required')
       end
@@ -76,7 +76,7 @@ RSpec.describe 'Real World Scenarios' do
 
   describe 'data export pipeline' do
     it 'exports data to multiple formats' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fetch_data do
           [
             { id: 1, name: 'Alice', score: 95 },
@@ -129,7 +129,7 @@ RSpec.describe 'Real World Scenarios' do
 
   describe 'order processing pipeline' do
     it 'processes an e-commerce order' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :validate_order do |order|
           raise 'Empty cart' if order[:items].empty?
           raise 'Invalid customer' unless order[:customer_id]
@@ -208,7 +208,7 @@ RSpec.describe 'Real World Scenarios' do
 
   describe 'log analysis pipeline' do
     it 'analyzes log entries' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :parse_logs do
           # Simulated log entries
           [
@@ -256,7 +256,7 @@ RSpec.describe 'Real World Scenarios' do
 
   describe 'configuration validation pipeline' do
     it 'validates and merges configuration from multiple sources' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :load_defaults do
           {
             database: { host: 'localhost', port: 5432, pool_size: 5 },
@@ -323,7 +323,7 @@ RSpec.describe 'Real World Scenarios' do
 
   describe 'data migration pipeline' do
     it 'migrates and transforms data between schemas' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :extract_legacy_data do
           # Old schema
           [

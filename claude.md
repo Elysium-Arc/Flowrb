@@ -1,14 +1,14 @@
-# Flowline
+# Flowrb
 
 A Ruby dataflow and pipeline library with declarative step definitions, automatic dependency resolution, parallel/sequential execution, and built-in retry/timeout support.
 
 ## Project Structure
 
 ```
-flowline/
+flowrb/
 ├── lib/
-│   ├── flowline.rb                    # Main module entry point
-│   └── flowline/
+│   ├── flowrb.rb                    # Main module entry point
+│   └── flowrb/
 │       ├── version.rb                 # VERSION = "0.1.0"
 │       ├── errors.rb                  # Error, CycleError, StepError, TimeoutError
 │       ├── step.rb                    # Step class (name, deps, callable, retry/timeout)
@@ -21,7 +21,7 @@ flowline/
 │           └── parallel.rb            # Parallel execution
 ├── spec/
 │   ├── spec_helper.rb
-│   ├── flowline/                      # Unit tests
+│   ├── flowrb/                      # Unit tests
 │   └── integration/                   # Integration tests
 ```
 
@@ -34,7 +34,7 @@ Immutable unit of work with name, dependencies, callable, and optional retry/tim
 Directed Acyclic Graph using Ruby's TSort for topological sorting and cycle detection. Provides `#levels` method to group steps by execution level for parallel execution.
 
 ### Pipeline
-User-facing DSL for defining and running pipelines via `Flowline.define { ... }`.
+User-facing DSL for defining and running pipelines via `Flowrb.define { ... }`.
 
 ### Result/StepResult
 Execution results with output, duration, timing, retry count, and error information.
@@ -46,7 +46,7 @@ Execution results with output, duration, timing, retry count, and error informat
 ## Usage Example
 
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   step :fetch do
     [1, 2, 3]
   end
@@ -78,7 +78,7 @@ result = pipeline.run(executor: :parallel, max_threads: 4)
 Steps can be configured to automatically retry on failure:
 
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   step :fetch_api, retries: 3, retry_delay: 2 do
     HTTP.get("https://api.example.com/data")
   end
@@ -114,7 +114,7 @@ result[:fetch_api].retries  # => number of retries that occurred
 Steps can be configured with execution timeouts:
 
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   step :slow_operation, timeout: 30 do
     # Will raise TimeoutError if not complete in 30 seconds
     long_running_computation
@@ -138,7 +138,7 @@ result[:slow_operation].timed_out?  # => true if step timed out
 Steps can be conditionally executed based on runtime conditions:
 
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   step :config do
     { feature_enabled: true, skip_export: false }
   end
@@ -175,12 +175,70 @@ result[:export].skipped?       # => false (unless was false)
 - Skipped steps don't count as failures (pipeline still succeeds)
 - Retries and timeouts are not applied to skipped steps
 
+## Caching (Luigi-style)
+
+Steps can be cached to enable resuming failed pipelines from the last successful step:
+
+```ruby
+# Using a file-based cache (persists across runs)
+pipeline.run(cache: './cache')
+
+# Using a memory cache (for testing)
+cache = Flowrb::Cache::MemoryStore.new
+pipeline.run(cache: cache)
+
+# Force re-execution (ignores cache)
+pipeline.run(cache: './cache', force: true)
+```
+
+### Step-level Cache Control
+
+```ruby
+pipeline = Flowrb.define do
+  # This step is cached (default behavior)
+  step :fetch_data do
+    expensive_api_call
+  end
+
+  # This step is never cached
+  step :current_time, cache: false do
+    Time.now
+  end
+
+  # Custom cache key based on input
+  step :process, depends_on: :fetch_data, cache_key: ->(input) { "process_#{input[:id]}" } do |data|
+    transform(data)
+  end
+end
+```
+
+### Resume Failed Pipeline
+
+```ruby
+# First run - step 2 fails, but step 1 is cached
+begin
+  pipeline.run(cache: './cache')
+rescue Flowrb::StepError
+  puts "Pipeline failed, but progress was saved"
+end
+
+# Second run - step 1 loads from cache, step 2 retries
+result = pipeline.run(cache: './cache')
+```
+
+**Cache Options:**
+- `cache: path` - File-based cache directory (creates `Flowrb::Cache::FileStore`)
+- `cache: store` - Custom cache store implementing `Flowrb::Cache::Base`
+- `force: true` - Ignore cache and re-execute all steps
+- Step option `cache: false` - Disable caching for specific steps
+- Step option `cache_key: lambda` - Custom cache key based on input
+
 ## Parallel Execution
 
 Steps at the same "level" (no inter-dependencies) run concurrently:
 
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   step :fetch_users do
     # Runs first (level 0)
     fetch_from_api("/users")
@@ -225,17 +283,17 @@ end
 
 ## Error Hierarchy
 
-- `Flowline::Error` - Base error
-- `Flowline::CycleError` - Circular dependency detected
-- `Flowline::MissingDependencyError` - Unknown dependency referenced
-- `Flowline::DuplicateStepError` - Step name already exists
-- `Flowline::StepError` - Step execution failed (wraps original error, includes partial_results)
-- `Flowline::TimeoutError` - Step exceeded timeout duration
+- `Flowrb::Error` - Base error
+- `Flowrb::CycleError` - Circular dependency detected
+- `Flowrb::MissingDependencyError` - Unknown dependency referenced
+- `Flowrb::DuplicateStepError` - Step name already exists
+- `Flowrb::StepError` - Step execution failed (wraps original error, includes partial_results)
+- `Flowrb::TimeoutError` - Step exceeded timeout duration
 
 ## Mermaid Diagram Generation
 
 ```ruby
-pipeline = Flowline.define do
+pipeline = Flowrb.define do
   step :fetch do; end
   step :process, depends_on: :fetch do |_|; end
   step :save, depends_on: :process do |_|; end
@@ -258,9 +316,9 @@ bundle exec rake           # Run both tests and linter
 
 ## Test Coverage
 
-- Line Coverage: ~98%
-- Branch Coverage: ~89%
-- 516 test examples covering:
+- Line Coverage: ~97%
+- Branch Coverage: ~90%
+- 597 test examples covering:
   - Unit tests for Step, DAG, Result, Pipeline, Executor (Sequential + Parallel)
   - Extended edge case tests for all components
   - Integration tests for basic pipelines and error handling
@@ -273,6 +331,7 @@ bundle exec rake           # Run both tests and linter
   - Step retry tests (retry counts, delays, backoff strategies, conditional retries)
   - Step timeout tests (timeout enforcement, timeout with retries)
   - Conditional execution tests (if/unless conditions, skipped steps, dependency handling)
+  - Caching tests (file store, memory store, cache invalidation, resume from failure)
 
 ## Dependencies
 

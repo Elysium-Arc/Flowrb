@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::DAG do
+RSpec.describe Flowrb::DAG do
   let(:dag) { described_class.new }
 
   def make_step(name, deps = [])
-    Flowline::Step.new(name, depends_on: deps) { 'result' }
+    Flowrb::Step.new(name, depends_on: deps) { 'result' }
   end
 
   describe 'complex graph topologies' do
@@ -133,7 +133,7 @@ RSpec.describe Flowline::DAG do
       dag.add(make_step(:c, [:b]))
       dag.add(make_step(:d, [:c]))
 
-      expect { dag.validate! }.to raise_error(Flowline::CycleError)
+      expect { dag.validate! }.to raise_error(Flowrb::CycleError)
     end
 
     it 'detects multiple independent cycles' do
@@ -141,7 +141,7 @@ RSpec.describe Flowline::DAG do
       dag.add(make_step(:a, [:b]))
       dag.add(make_step(:b, [:a]))
 
-      expect { dag.validate! }.to raise_error(Flowline::CycleError)
+      expect { dag.validate! }.to raise_error(Flowrb::CycleError)
     end
 
     it 'handles graph with cycle and missing dependency' do
@@ -149,7 +149,7 @@ RSpec.describe Flowline::DAG do
       dag.add(make_step(:b, %i[a missing]))
 
       # Should raise MissingDependencyError first (checked before cycles)
-      expect { dag.validate! }.to raise_error(Flowline::MissingDependencyError)
+      expect { dag.validate! }.to raise_error(Flowrb::MissingDependencyError)
     end
   end
 
@@ -157,7 +157,7 @@ RSpec.describe Flowline::DAG do
     it 'detects multiple missing dependencies in one step' do
       dag.add(make_step(:process, %i[missing1 missing2 missing3]))
 
-      expect { dag.validate! }.to raise_error(Flowline::MissingDependencyError) do |error|
+      expect { dag.validate! }.to raise_error(Flowrb::MissingDependencyError) do |error|
         expect(error.missing_dependency).to(satisfy { |dep| %i[missing1 missing2 missing3].include?(dep) })
       end
     end
@@ -168,7 +168,7 @@ RSpec.describe Flowline::DAG do
       dag.add(make_step(:c, [:missing]))
       dag.add(make_step(:d, [:c]))
 
-      expect { dag.validate! }.to raise_error(Flowline::MissingDependencyError) do |error|
+      expect { dag.validate! }.to raise_error(Flowrb::MissingDependencyError) do |error|
         expect(error.step_name).to eq(:c)
         expect(error.missing_dependency).to eq(:missing)
       end

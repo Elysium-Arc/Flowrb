@@ -2,11 +2,11 @@
 
 require 'timeout'
 
-module Flowline
+module Flowrb
   module Executor
     # Abstract base class for pipeline executors.
     # Subclasses must implement the #execute method.
-    class Base
+    class Base # rubocop:disable Metrics/ClassLength
       attr_reader :dag
 
       def initialize(dag)
@@ -180,6 +180,63 @@ module Flowline
           end
         else
           condition.call(**input[:kwargs])
+        end
+      end
+
+      # Cache support methods
+      def cache_key_for(step, input)
+        custom_key = step.cache_key
+        if custom_key
+          if input[:kwargs].empty?
+            custom_key.call(*input[:args])
+          else
+            custom_key.call(**input[:kwargs])
+          end
+        else
+          step.name.to_s
+        end
+      end
+
+      def check_cache(step, input, cache, force)
+        return nil unless cache
+        return nil if force
+        return nil unless step.cache_enabled?
+
+        key = cache_key_for(step, input)
+        return nil unless cache.exist?(key)
+
+        cached = cache.read(key)
+        return nil unless cached.is_a?(Cache::CachedResult)
+
+        build_cached_result(step, cached)
+      end
+
+      def write_cache(step, result, input, cache)
+        return unless cache
+        return unless step.cache_enabled?
+        return if result.failed?
+
+        key = cache_key_for(step, input)
+        cached = Cache::CachedResult.new(
+          output: result.output,
+          status: result.status,
+          skipped: result.skipped?
+        )
+        cache.write(key, cached)
+      end
+
+      def build_cached_result(step, cached)
+        if cached.skipped?
+          build_skipped_result(step)
+        else
+          StepResult.new(
+            step_name: step.name,
+            output: cached.output,
+            duration: 0,
+            started_at: Time.now,
+            status: cached.status,
+            retries: 0
+          )
         end
       end
     end

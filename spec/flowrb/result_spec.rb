@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::StepResult do
+RSpec.describe Flowrb::StepResult do
   describe '#initialize' do
     it 'creates a step result with all attributes' do
       started = Time.now
@@ -89,9 +89,9 @@ RSpec.describe Flowline::StepResult do
   end
 end
 
-RSpec.describe Flowline::Result do
+RSpec.describe Flowrb::Result do
   let(:step_result) do
-    Flowline::StepResult.new(step_name: :fetch, output: [1, 2, 3], status: :success)
+    Flowrb::StepResult.new(step_name: :fetch, output: [1, 2, 3], status: :success)
   end
 
   describe '#initialize' do
@@ -120,7 +120,7 @@ RSpec.describe Flowline::Result do
     end
 
     it 'returns false when any step failed' do
-      failed = Flowline::StepResult.new(step_name: :process, error: StandardError.new)
+      failed = Flowrb::StepResult.new(step_name: :process, error: StandardError.new)
       result = described_class.new(step_results: { fetch: step_result, process: failed })
       expect(result).not_to be_success
     end
@@ -163,8 +163,8 @@ RSpec.describe Flowline::Result do
 
   describe '#outputs' do
     it 'returns hash of step outputs' do
-      result1 = Flowline::StepResult.new(step_name: :a, output: 1, status: :success)
-      result2 = Flowline::StepResult.new(step_name: :b, output: 2, status: :success)
+      result1 = Flowrb::StepResult.new(step_name: :a, output: 1, status: :success)
+      result2 = Flowrb::StepResult.new(step_name: :b, output: 2, status: :success)
       result = described_class.new(step_results: { a: result1, b: result2 })
 
       expect(result.outputs).to eq({ a: 1, b: 2 })
@@ -173,8 +173,8 @@ RSpec.describe Flowline::Result do
 
   describe '#completed_steps' do
     it 'returns list of completed step names' do
-      result1 = Flowline::StepResult.new(step_name: :a, output: 1, status: :success)
-      result2 = Flowline::StepResult.new(step_name: :b, output: 2, status: :success)
+      result1 = Flowrb::StepResult.new(step_name: :a, output: 1, status: :success)
+      result2 = Flowrb::StepResult.new(step_name: :b, output: 2, status: :success)
       result = described_class.new(step_results: { a: result1, b: result2 })
 
       expect(result.completed_steps).to contain_exactly(:a, :b)

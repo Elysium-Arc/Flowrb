@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::Executor::Sequential do
+RSpec.describe Flowrb::Executor::Sequential do
   def make_step(name, deps = [], &block)
-    Flowline::Step.new(name, depends_on: deps, &block)
+    Flowrb::Step.new(name, depends_on: deps, &block)
   end
 
-  let(:dag) { Flowline::DAG.new }
+  let(:dag) { Flowrb::DAG.new }
 
   describe 'execution order guarantees' do
     it 'ensures dependencies complete before dependents' do
@@ -129,7 +129,7 @@ RSpec.describe Flowline::Executor::Sequential do
 
       executor = described_class.new(dag)
 
-      expect { executor.execute }.to raise_error(Flowline::StepError) do |error|
+      expect { executor.execute }.to raise_error(Flowrb::StepError) do |error|
         expect(error.original_error).to be_a(TypeError)
       end
     end
@@ -139,7 +139,7 @@ RSpec.describe Flowline::Executor::Sequential do
 
       executor = described_class.new(dag)
 
-      expect { executor.execute }.to raise_error(Flowline::StepError) do |error|
+      expect { executor.execute }.to raise_error(Flowrb::StepError) do |error|
         expect(error.original_error.backtrace).not_to be_empty
         expect(error.original_error.backtrace.first).to include('sequential_extended_spec.rb')
       end
@@ -153,7 +153,7 @@ RSpec.describe Flowline::Executor::Sequential do
 
       executor = described_class.new(dag)
 
-      expect { executor.execute }.to raise_error(Flowline::StepError) do |error|
+      expect { executor.execute }.to raise_error(Flowrb::StepError) do |error|
         partial = error.partial_results
 
         expect(partial[:step1].output).to eq('result1')

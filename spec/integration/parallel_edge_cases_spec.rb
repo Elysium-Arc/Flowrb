@@ -10,7 +10,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
   describe 'thread safety' do
     it 'handles concurrent access to shared output hash safely' do
       # Stress test with many parallel tasks writing to results
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         100.times do |i|
           step :"writer_#{i}" do
             # Simulate some work
@@ -34,7 +34,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
       shared_array = []
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         10.times do |i|
           step :"task_#{i}" do
             # Each task appends to shared array (testing isolation)
@@ -68,7 +68,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
       executed = []
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :ok_task do
           mutex.synchronize { executed << :ok_task }
           'success'
@@ -90,12 +90,12 @@ RSpec.describe 'Parallel Execution Edge Cases' do
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError)
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError)
       expect(executed).not_to include(:dependent_on_fail)
     end
 
     it 'preserves partial results from completed parallel tasks' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fast_success do
           'completed quickly'
         end
@@ -111,14 +111,14 @@ RSpec.describe 'Parallel Execution Edge Cases' do
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError) do |error|
         # fast_success should have completed
         expect(error.partial_results[:fast_success]&.output).to eq('completed quickly')
       end
     end
 
     it 'reports correct failing step when multiple could fail' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :task_a do
           sleep 0.01
           raise 'error A'
@@ -135,7 +135,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError) do |error|
         # The first to fail should be reported (task_a due to timing)
         expect(error.step_name).to(satisfy { |name| %i[task_a task_b task_c].include?(name) })
       end
@@ -147,7 +147,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
       execution_times = {}
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :slow_root do
           sleep 0.05
           mutex.synchronize { execution_times[:slow_root] = Time.now }
@@ -182,7 +182,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
       start_times = {}
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :task_a do
           mutex.synchronize { start_times[:task_a] = Time.now }
           sleep 0.05
@@ -221,7 +221,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
       current_count = 0
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         10.times do |i|
           step :"task_#{i}" do
             mutex.synchronize do
@@ -246,7 +246,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
       execution_order = []
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         5.times do |i|
           step :"task_#{i}" do
             mutex.synchronize { execution_order << i }
@@ -268,7 +268,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
 
   describe 'nil and edge case outputs' do
     it 'handles nil outputs in parallel execution' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :returns_nil do
           nil
         end
@@ -288,7 +288,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
     end
 
     it 'handles empty array outputs' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :empty do
           []
         end
@@ -304,7 +304,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
     end
 
     it 'handles complex nested objects' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :producer do
           {
             array: [1, [2, 3], { nested: 'value' }],
@@ -334,13 +334,13 @@ RSpec.describe 'Parallel Execution Edge Cases' do
 
   describe 'exception types' do
     it 'preserves original exception type' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :type_error do
           raise TypeError, 'wrong type'
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError) do |error|
         expect(error.original_error).to be_a(TypeError)
         expect(error.original_error.message).to eq('wrong type')
       end
@@ -356,13 +356,13 @@ RSpec.describe 'Parallel Execution Edge Cases' do
         end
       end
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :custom_error do
           raise custom_error_class.new('custom failure', code: 42)
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError) do |error|
         expect(error.original_error.code).to eq(42)
       end
     end
@@ -370,7 +370,7 @@ RSpec.describe 'Parallel Execution Edge Cases' do
 
   describe 'idempotency' do
     it 'produces consistent results across multiple runs' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :deterministic do
           [1, 2, 3].map { |n| n * 2 }
         end

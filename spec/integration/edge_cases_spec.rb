@@ -3,7 +3,7 @@
 RSpec.describe 'Edge Cases' do
   describe 'unusual step names' do
     it 'handles step names with numbers' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :step1 do
           1
         end
@@ -19,7 +19,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'handles step names with underscores' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fetch_user_data do
           { id: 1 }
         end
@@ -34,7 +34,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'handles single character step names' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a do
           1
         end
@@ -53,7 +53,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'handles string step names (converted to symbols)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step 'string_name' do
           'result'
         end
@@ -66,7 +66,7 @@ RSpec.describe 'Edge Cases' do
 
   describe 'dependency edge cases' do
     it 'handles step depending on all previous steps' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a do
           1
         end
@@ -89,7 +89,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'handles long dependency chain with branching' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :root do
           1
         end
@@ -122,7 +122,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'handles re-convergent paths' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :source do
           10
         end
@@ -161,7 +161,7 @@ RSpec.describe 'Edge Cases' do
 
   describe 'callable edge cases' do
     it 'handles proc that returns proc' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :create_multiplier do
           ->(n) { n * 5 }
         end
@@ -178,7 +178,7 @@ RSpec.describe 'Edge Cases' do
     it 'handles step returning class instance' do
       result_class = Struct.new(:value, :metadata)
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :create_object do
           result_class.new(42, { processed: true })
         end
@@ -204,7 +204,7 @@ RSpec.describe 'Edge Cases' do
 
       counter = counter_class.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :count, callable: counter
       end
 
@@ -220,7 +220,7 @@ RSpec.describe 'Edge Cases' do
 
   describe 'initial input edge cases' do
     it 'handles nil initial input explicitly' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :handle_nil do |input|
           input.nil? ? 'was nil' : 'was not nil'
         end
@@ -231,7 +231,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'handles complex initial input' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :process do |input|
           input[:data].map { |d| d * input[:multiplier] }
         end
@@ -242,7 +242,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'initial input only goes to root steps' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :root do |input|
           input * 2
         end
@@ -258,7 +258,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'multiple roots each receive initial input' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :root_a do |input|
           "#{input}A"
         end
@@ -281,7 +281,7 @@ RSpec.describe 'Edge Cases' do
 
   describe 'result edge cases' do
     it 'result to_h includes all information' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :only do
           42
         end
@@ -298,13 +298,13 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'step result includes error details on failure' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fail do
           raise ArgumentError, 'test error'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
         step_result = error.partial_results[:fail]
         expect(step_result.error).to be_a(ArgumentError)
         expect(step_result.error.message).to eq('test error')
@@ -313,7 +313,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'accessing non-existent step returns nil' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :exists do
           1
         end
@@ -326,7 +326,7 @@ RSpec.describe 'Edge Cases' do
 
   describe 'mermaid generation edge cases' do
     it 'mermaid handles single standalone step' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :alone do
           1
         end
@@ -338,7 +338,7 @@ RSpec.describe 'Edge Cases' do
     end
 
     it 'mermaid handles many parallel steps' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         5.times do |i|
           step :"parallel_#{i}" do
             i
@@ -354,12 +354,12 @@ RSpec.describe 'Edge Cases' do
 
   describe 'validation edge cases' do
     it 'empty pipeline validates successfully' do
-      pipeline = Flowline.define {}
+      pipeline = Flowrb.define {}
       expect(pipeline.validate!).to be true
     end
 
     it 'single step validates successfully' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :only do
           1
         end
@@ -369,7 +369,7 @@ RSpec.describe 'Edge Cases' do
 
     it 'validates dependency order in definition does not matter' do
       # Define dependent step before its dependency
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :child, depends_on: :parent do |n|
           n + 1
         end

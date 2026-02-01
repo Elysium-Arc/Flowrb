@@ -13,7 +13,7 @@ RSpec.describe 'DAG Patterns' do
     it 'executes diamond pattern correctly with sequential executor' do
       execution_order = []
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fetch do
           execution_order << :fetch
           { data: [1, 2, 3] }
@@ -47,7 +47,7 @@ RSpec.describe 'DAG Patterns' do
     end
 
     it 'executes diamond pattern correctly with parallel executor' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fetch do
           { data: [1, 2, 3] }
         end
@@ -82,7 +82,7 @@ RSpec.describe 'DAG Patterns' do
     # One source feeding multiple independent consumers
     # Common in: data export to multiple formats, multi-channel notifications
     it 'handles fan-out to many consumers' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :source do
           { users: %w[alice bob charlie] }
         end
@@ -121,7 +121,7 @@ RSpec.describe 'DAG Patterns' do
     # Multiple independent sources merging into one
     # Common in: data aggregation, report generation
     it 'handles fan-in from many sources' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fetch_users do
           [{ id: 1, name: 'Alice' }, { id: 2, name: 'Bob' }]
         end
@@ -163,7 +163,7 @@ RSpec.describe 'DAG Patterns' do
     # Binary tree reduction (like MapReduce)
     # Common in: aggregation, parallel sum/merge operations
     it 'handles tree reduction' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         # Level 0: leaf nodes
         step :leaf_1 do
           [1, 2]
@@ -206,7 +206,7 @@ RSpec.describe 'DAG Patterns' do
     # Long sequential chain
     # Common in: data transformation pipelines, processing stages
     it 'handles long sequential chain' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :stage_1 do
           1
         end
@@ -251,7 +251,7 @@ RSpec.describe 'DAG Patterns' do
     # Multiple independent starting points converging
     # Common in: multi-source data integration
     it 'handles multiple roots converging through intermediate steps' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         # Roots (level 0)
         step :api_source do
           { source: 'api', data: [1, 2, 3] }
@@ -299,7 +299,7 @@ RSpec.describe 'DAG Patterns' do
     # Irregular graph with cross-dependencies
     # Tests that the executor handles arbitrary valid DAGs
     it 'handles complex mesh with cross-dependencies' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a do
           'a'
         end
@@ -337,7 +337,7 @@ RSpec.describe 'DAG Patterns' do
     # Many independent parallel tasks
     # Tests scalability and thread handling
     it 'handles wide graph with many parallel tasks' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         50.times do |i|
           step :"task_#{i}" do
             i * 2
@@ -360,7 +360,7 @@ RSpec.describe 'DAG Patterns' do
     # Very deep chain
     # Tests stack handling and long dependency chains
     it 'handles deep graph with many levels' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :level_0 do
           0
         end

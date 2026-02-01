@@ -2,7 +2,7 @@
 
 require_relative 'base'
 
-module Flowline
+module Flowrb
   module Executor
     # Executes pipeline steps in parallel where possible.
     # Steps at the same level (no inter-dependencies) run concurrently.
@@ -12,9 +12,9 @@ module Flowline
         @max_threads = max_threads
       end
 
-      def execute(initial_input: nil)
+      def execute(initial_input: nil, cache: nil, force: false)
         dag.validate!
-        context = ExecutionContext.new(initial_input)
+        context = ExecutionContext.new(initial_input, cache, force)
 
         dag.levels.each do |level_steps|
           break if context.error_info
@@ -33,11 +33,13 @@ module Flowline
 
       # Holds mutable state during parallel execution
       class ExecutionContext
-        attr_reader :step_results, :outputs, :mutex, :started_at, :initial_input
+        attr_reader :step_results, :outputs, :mutex, :started_at, :initial_input, :cache, :force
         attr_accessor :error_info
 
-        def initialize(initial_input)
+        def initialize(initial_input, cache, force)
           @initial_input = initial_input
+          @cache = cache
+          @force = force
           @started_at = Time.now
           @step_results = {}
           @outputs = {}
@@ -104,9 +106,21 @@ module Flowline
       def execute_step(step, context)
         input = context.mutex.synchronize { build_step_input(step, context.outputs, context.initial_input) }
 
-        return build_skipped_result(step) if should_skip_step?(step, input)
+        # Check cache first
+        cached_result = check_cache(step, input, context.cache, context.force)
+        return cached_result if cached_result
 
-        execute_step_with_retry(step, input)
+        # Check conditions
+        if should_skip_step?(step, input)
+          result = build_skipped_result(step)
+          context.mutex.synchronize { write_cache(step, result, input, context.cache) }
+          return result
+        end
+
+        # Execute and cache result
+        result = execute_step_with_retry(step, input)
+        context.mutex.synchronize { write_cache(step, result, input, context.cache) }
+        result
       end
     end
   end

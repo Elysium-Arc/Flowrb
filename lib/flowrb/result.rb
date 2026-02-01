@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Flowline
+module Flowrb
   # Represents the result of executing a single step.
   class StepResult
     attr_reader :step_name, :output, :duration, :started_at, :error, :retries
@@ -54,7 +54,7 @@ module Flowline
     end
 
     def inspect
-      "#<Flowline::StepResult step=#{step_name.inspect} status=#{status.inspect} duration=#{duration&.round(4)}>"
+      "#<Flowrb::StepResult step=#{step_name.inspect} status=#{status.inspect} duration=#{duration&.round(4)}>"
     end
   end
 
@@ -110,7 +110,7 @@ module Flowline
 
     def inspect
       status = success? ? 'success' : 'failed'
-      "#<Flowline::Result status=#{status} steps=#{step_results.size} duration=#{duration&.round(4)}>"
+      "#<Flowrb::Result status=#{status} steps=#{step_results.size} duration=#{duration&.round(4)}>"
     end
   end
 end

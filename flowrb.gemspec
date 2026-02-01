@@ -1,16 +1,16 @@
 # frozen_string_literal: true
 
-require_relative 'lib/flowline/version'
+require_relative 'lib/flowrb/version'
 
 Gem::Specification.new do |spec|
-  spec.name = 'flowline'
-  spec.version = Flowline::VERSION
-  spec.authors = ['Flowline Contributors']
-  spec.email = ['flowline@example.com']
+  spec.name = 'flowrb'
+  spec.version = Flowrb::VERSION
+  spec.authors = ['Flowrb Contributors']
+  spec.email = ['flowrb@example.com']
 
   spec.summary = 'A Ruby dataflow and pipeline library'
-  spec.description = 'Flowline provides declarative step definitions, automatic dependency resolution, and sequential execution for building data pipelines in Ruby.'
-  spec.homepage = 'https://github.com/flowline/flowline'
+  spec.description = 'Flowrb provides declarative step definitions, automatic dependency resolution, and sequential execution for building data pipelines in Ruby.'
+  spec.homepage = 'https://github.com/flowrb/flowrb'
   spec.license = 'MIT'
   spec.required_ruby_version = '>= 3.1.0'
 

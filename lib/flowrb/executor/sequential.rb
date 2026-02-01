@@ -2,13 +2,15 @@
 
 require_relative 'base'
 
-module Flowline
+module Flowrb
   module Executor
     # Executes pipeline steps sequentially in topological order.
     class Sequential < Base
-      def execute(initial_input: nil)
+      def execute(initial_input: nil, cache: nil, force: false) # rubocop:disable Metrics/MethodLength
         dag.validate!
 
+        @cache = cache
+        @force = force
         started_at = Time.now
         step_results = {}
         outputs = {}
@@ -48,9 +50,21 @@ module Flowline
       def execute_step(step, outputs, initial_input)
         input = build_step_input(step, outputs, initial_input)
 
-        return build_skipped_result(step) if should_skip_step?(step, input)
+        # Check cache first
+        cached_result = check_cache(step, input, @cache, @force)
+        return cached_result if cached_result
 
-        execute_step_with_retry(step, input)
+        # Check conditions
+        if should_skip_step?(step, input)
+          result = build_skipped_result(step)
+          write_cache(step, result, input, @cache)
+          return result
+        end
+
+        # Execute and cache result
+        result = execute_step_with_retry(step, input)
+        write_cache(step, result, input, @cache)
+        result
       end
 
       def build_result(step_results, started_at)

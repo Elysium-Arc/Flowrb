@@ -1,14 +1,14 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::Error do
+RSpec.describe Flowrb::Error do
   it 'is a StandardError' do
     expect(described_class.superclass).to eq(StandardError)
   end
 end
 
-RSpec.describe Flowline::CycleError do
-  it 'is a Flowline::Error' do
-    expect(described_class.superclass).to eq(Flowline::Error)
+RSpec.describe Flowrb::CycleError do
+  it 'is a Flowrb::Error' do
+    expect(described_class.superclass).to eq(Flowrb::Error)
   end
 
   it 'accepts a cycle parameter' do
@@ -22,9 +22,9 @@ RSpec.describe Flowline::CycleError do
   end
 end
 
-RSpec.describe Flowline::MissingDependencyError do
-  it 'is a Flowline::Error' do
-    expect(described_class.superclass).to eq(Flowline::Error)
+RSpec.describe Flowrb::MissingDependencyError do
+  it 'is a Flowrb::Error' do
+    expect(described_class.superclass).to eq(Flowrb::Error)
   end
 
   it 'accepts step_name and missing_dependency parameters' do
@@ -38,9 +38,9 @@ RSpec.describe Flowline::MissingDependencyError do
   end
 end
 
-RSpec.describe Flowline::DuplicateStepError do
-  it 'is a Flowline::Error' do
-    expect(described_class.superclass).to eq(Flowline::Error)
+RSpec.describe Flowrb::DuplicateStepError do
+  it 'is a Flowrb::Error' do
+    expect(described_class.superclass).to eq(Flowrb::Error)
   end
 
   it 'accepts step_name parameter' do
@@ -49,14 +49,14 @@ RSpec.describe Flowline::DuplicateStepError do
   end
 end
 
-RSpec.describe Flowline::StepError do
-  it 'is a Flowline::Error' do
-    expect(described_class.superclass).to eq(Flowline::Error)
+RSpec.describe Flowrb::StepError do
+  it 'is a Flowrb::Error' do
+    expect(described_class.superclass).to eq(Flowrb::Error)
   end
 
   it 'accepts step_name, original_error, and partial_results' do
     original = StandardError.new('boom')
-    partial = Flowline::Result.new
+    partial = Flowrb::Result.new
 
     error = described_class.new(
       'Step failed',

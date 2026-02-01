@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::DAG do
+RSpec.describe Flowrb::DAG do
   let(:dag) { described_class.new }
 
   def make_step(name, deps = [])
-    Flowline::Step.new(name, depends_on: deps) { 'result' }
+    Flowrb::Step.new(name, depends_on: deps) { 'result' }
   end
 
   describe '#add' do
@@ -22,7 +22,7 @@ RSpec.describe Flowline::DAG do
     it 'raises DuplicateStepError for duplicate step names' do
       dag.add(make_step(:fetch))
       expect { dag.add(make_step(:fetch)) }.to raise_error(
-        Flowline::DuplicateStepError,
+        Flowrb::DuplicateStepError,
         /already exists/
       )
     end
@@ -137,7 +137,7 @@ RSpec.describe Flowline::DAG do
 
     it 'raises MissingDependencyError for unknown dependency' do
       dag.add(make_step(:process, [:unknown]))
-      expect { dag.validate! }.to raise_error(Flowline::MissingDependencyError)
+      expect { dag.validate! }.to raise_error(Flowrb::MissingDependencyError)
     end
 
     it 'includes details in MissingDependencyError' do
@@ -151,20 +151,20 @@ RSpec.describe Flowline::DAG do
     context 'with cycles' do
       it 'raises CycleError for self-referencing step' do
         dag.add(make_step(:a, [:a]))
-        expect { dag.validate! }.to raise_error(Flowline::CycleError)
+        expect { dag.validate! }.to raise_error(Flowrb::CycleError)
       end
 
       it 'raises CycleError for A -> B -> A cycle' do
         dag.add(make_step(:a, [:b]))
         dag.add(make_step(:b, [:a]))
-        expect { dag.validate! }.to raise_error(Flowline::CycleError)
+        expect { dag.validate! }.to raise_error(Flowrb::CycleError)
       end
 
       it 'raises CycleError for longer cycles' do
         dag.add(make_step(:a, [:c]))
         dag.add(make_step(:b, [:a]))
         dag.add(make_step(:c, [:b]))
-        expect { dag.validate! }.to raise_error(Flowline::CycleError)
+        expect { dag.validate! }.to raise_error(Flowrb::CycleError)
       end
 
       it 'includes cycle information in error' do

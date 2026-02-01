@@ -3,7 +3,7 @@
 RSpec.describe 'Step Timeouts' do
   describe 'timeout option' do
     it 'allows step to complete within timeout' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fast, timeout: 1 do
           sleep 0.05
           'completed'
@@ -16,33 +16,33 @@ RSpec.describe 'Step Timeouts' do
     end
 
     it 'raises TimeoutError when step exceeds timeout' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :slow, timeout: 0.1 do
           sleep 1
           'never returned'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
         expect(error.step_name).to eq(:slow)
-        expect(error.original_error).to be_a(Flowline::TimeoutError)
+        expect(error.original_error).to be_a(Flowrb::TimeoutError)
       end
     end
 
     it 'includes timeout duration in error message' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :timed_out, timeout: 0.1 do
           sleep 1
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
         expect(error.original_error.message).to include('0.1')
       end
     end
 
     it 'works with parallel executor' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fast_parallel, timeout: 1 do
           sleep 0.05
           'fast'
@@ -59,7 +59,7 @@ RSpec.describe 'Step Timeouts' do
     end
 
     it 'times out individual step in parallel execution' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fast_one, timeout: 1 do
           'quick'
         end
@@ -70,7 +70,7 @@ RSpec.describe 'Step Timeouts' do
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError) do |error|
         expect(error.step_name).to eq(:slow_one)
       end
     end
@@ -80,7 +80,7 @@ RSpec.describe 'Step Timeouts' do
     it 'retries after timeout' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :timeout_retry, timeout: 0.1, retries: 2 do
           attempts += 1
           if attempts < 3
@@ -100,15 +100,15 @@ RSpec.describe 'Step Timeouts' do
     it 'fails after all retries timeout' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :always_timeout, timeout: 0.1, retries: 2 do
           attempts += 1
           sleep 1
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
-        expect(error.original_error).to be_a(Flowline::TimeoutError)
+      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
+        expect(error.original_error).to be_a(Flowrb::TimeoutError)
       end
       expect(attempts).to eq(3) # 1 initial + 2 retries
     end
@@ -117,7 +117,7 @@ RSpec.describe 'Step Timeouts' do
       attempts = 0
       timestamps = []
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :delayed_timeout_retry, timeout: 0.05, retries: 2, retry_delay: 0.1 do
           timestamps << Time.now
           attempts += 1
@@ -144,20 +144,20 @@ RSpec.describe 'Step Timeouts' do
 
   describe 'step result timeout information' do
     it 'records that step timed out in partial results' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :timed_out_step, timeout: 0.1 do
           sleep 1
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
         step_result = error.partial_results[:timed_out_step]
         expect(step_result).to be_timed_out
       end
     end
 
     it 'records successful step as not timed out' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :success, timeout: 1 do
           'done'
         end
@@ -170,7 +170,7 @@ RSpec.describe 'Step Timeouts' do
 
   describe 'no timeout (default behavior)' do
     it 'runs without timeout when not specified' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :no_timeout do
           sleep 0.1
           'completed'

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Flowline
+module Flowrb
   # Represents an atomic unit of work in a pipeline.
   # Steps are immutable after creation for thread safety.
   class Step
@@ -59,12 +59,22 @@ module Flowline
       !if_condition.nil? || !unless_condition.nil?
     end
 
+    # Cache options
+    def cache_enabled?
+      # Default to true unless explicitly set to false
+      options.fetch(:cache, true)
+    end
+
+    def cache_key
+      options.fetch(:cache_key, nil)
+    end
+
     def to_s
       "Step(#{name})"
     end
 
     def inspect
-      "#<Flowline::Step name=#{name.inspect} dependencies=#{dependencies.inspect}>"
+      "#<Flowrb::Step name=#{name.inspect} dependencies=#{dependencies.inspect}>"
     end
 
     private

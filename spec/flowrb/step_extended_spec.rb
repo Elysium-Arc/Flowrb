@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::Step do
+RSpec.describe Flowrb::Step do
   describe 'edge cases' do
     it 'handles empty dependencies array' do
       step = described_class.new(:fetch, depends_on: []) { 'result' }

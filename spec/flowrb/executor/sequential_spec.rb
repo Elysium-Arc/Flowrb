@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::Executor::Sequential do
+RSpec.describe Flowrb::Executor::Sequential do
   def make_step(name, deps = [], &block)
-    Flowline::Step.new(name, depends_on: deps, &block)
+    Flowrb::Step.new(name, depends_on: deps, &block)
   end
 
-  let(:dag) { Flowline::DAG.new }
+  let(:dag) { Flowrb::DAG.new }
 
   describe '#execute' do
     it 'executes steps in topological order' do
@@ -135,7 +135,7 @@ RSpec.describe Flowline::Executor::Sequential do
 
         executor = described_class.new(dag)
 
-        expect { executor.execute }.to raise_error(Flowline::StepError) do |error|
+        expect { executor.execute }.to raise_error(Flowrb::StepError) do |error|
           expect(error.step_name).to eq(:fail)
           expect(error.original_error.message).to eq('boom')
         end
@@ -148,7 +148,7 @@ RSpec.describe Flowline::Executor::Sequential do
 
         executor = described_class.new(dag)
 
-        expect { executor.execute }.to raise_error(Flowline::StepError) do |error|
+        expect { executor.execute }.to raise_error(Flowrb::StepError) do |error|
           expect(error.partial_results[:a].output).to eq(1)
           expect(error.partial_results[:b]).to be_failed
         end
@@ -171,7 +171,7 @@ RSpec.describe Flowline::Executor::Sequential do
 
         executor = described_class.new(dag)
 
-        expect { executor.execute }.to raise_error(Flowline::StepError)
+        expect { executor.execute }.to raise_error(Flowrb::StepError)
         expect(executed).to eq(%i[a b])
       end
 
@@ -180,16 +180,16 @@ RSpec.describe Flowline::Executor::Sequential do
 
         executor = described_class.new(dag)
 
-        expect { executor.execute }.to raise_error(Flowline::MissingDependencyError)
+        expect { executor.execute }.to raise_error(Flowrb::MissingDependencyError)
       end
     end
   end
 end
 
-RSpec.describe Flowline::Executor::Base do
+RSpec.describe Flowrb::Executor::Base do
   describe '#execute' do
     it 'raises NotImplementedError' do
-      dag = Flowline::DAG.new
+      dag = Flowrb::DAG.new
       executor = described_class.new(dag)
 
       expect { executor.execute }.to raise_error(NotImplementedError)

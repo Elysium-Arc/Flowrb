@@ -5,7 +5,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'runs step when if condition returns true' do
       executed = false
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :conditional, if: -> { true } do
           executed = true
           'executed'
@@ -21,7 +21,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'skips step when if condition returns false' do
       executed = false
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :conditional, if: -> { false } do
           executed = true
           'executed'
@@ -38,7 +38,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'passes input to if condition' do
       received_input = nil
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :conditional, if: lambda { |input|
           received_input = input
           input[:run]
@@ -54,7 +54,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'passes dependency output to if condition' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :producer do
           { should_run: true, data: 'hello' }
         end
@@ -70,7 +70,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'skips step based on dependency output' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :producer do
           { should_run: false, data: 'hello' }
         end
@@ -91,7 +91,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'runs step when unless condition returns false' do
       executed = false
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :conditional, unless: -> { false } do
           executed = true
           'executed'
@@ -107,7 +107,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'skips step when unless condition returns true' do
       executed = false
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :conditional, unless: -> { true } do
           executed = true
           'executed'
@@ -121,7 +121,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'passes input to unless condition' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :conditional, unless: ->(input) { input[:skip] } do |input|
           input[:value]
         end
@@ -135,7 +135,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
 
   describe 'skipped step behavior' do
     it 'marks skipped step with skipped status' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :skipped_step, if: -> { false } do
           'never'
         end
@@ -149,7 +149,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'records zero duration for skipped steps' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :skipped_step, if: -> { false } do
           sleep 1
           'never'
@@ -161,7 +161,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'records zero retries for skipped steps' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :skipped_step, if: -> { false }, retries: 3 do
           'never'
         end
@@ -176,7 +176,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'passes nil for skipped single dependency' do
       received_input = nil
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :skipped, if: -> { false } do
           'skipped output'
         end
@@ -196,7 +196,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'passes nil in kwargs for skipped multiple dependencies' do
       received_kwargs = nil
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :step_a do
           'a value'
         end
@@ -218,7 +218,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'allows conditional check on skipped dependency' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :maybe_skip, if: -> { false } do
           'data'
         end
@@ -239,7 +239,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
 
   describe 'chained conditional steps' do
     it 'handles chain of conditional steps' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :first, if: -> { true } do
           'first'
         end
@@ -258,7 +258,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'stops chain when condition fails' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :first, if: -> { true } do
           nil # returns nil
         end
@@ -282,7 +282,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
 
   describe 'parallel execution with conditions' do
     it 'evaluates conditions correctly in parallel' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :run_this, if: -> { true } do
           'executed'
         end
@@ -299,7 +299,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'handles parallel steps with dependency-based conditions' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :config do
           { feature_a: true, feature_b: false }
         end
@@ -329,7 +329,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'does not retry skipped steps' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :skipped_retry, if: -> { false }, retries: 3 do
           attempts += 1
           raise 'should not run'
@@ -342,7 +342,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'does not apply timeout to skipped steps' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :skipped_timeout, if: -> { false }, timeout: 0.01 do
           sleep 10
           'never'
@@ -360,7 +360,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     it 'applies retries to conditional step that runs' do
       attempts = 0
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :retry_if_run, if: -> { true }, retries: 2 do
           attempts += 1
           raise 'fail' if attempts < 3
@@ -377,7 +377,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
 
   describe 'edge cases' do
     it 'handles both if and unless (if takes precedence)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :both_conditions, if: -> { true }, unless: -> { true } do
           'executed'
         end
@@ -389,7 +389,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'handles nil condition (treated as no condition)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :nil_if, if: nil do
           'executed'
         end
@@ -400,7 +400,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'handles condition that returns truthy non-boolean' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :truthy, if: -> { 'truthy string' } do
           'executed'
         end
@@ -411,7 +411,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'handles condition that returns falsy non-boolean' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :falsy_nil, if: -> {} do
           'executed'
         end
@@ -422,7 +422,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'handles exception in condition' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :bad_condition, if: -> { raise 'condition error' } do
           'never'
         end
@@ -435,7 +435,7 @@ RSpec.describe 'Step Conditional Execution' do # rubocop:disable RSpec/DescribeC
     end
 
     it 'handles condition with multiple dependencies kwargs' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a do
           10
         end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-module Flowline
+module Flowrb
   # User-facing DSL class for defining and executing pipelines.
   class Pipeline
     attr_reader :dag
@@ -22,10 +22,13 @@ module Flowline
     # @param initial_input [Object] Input passed to root steps (steps with no dependencies)
     # @param executor [Symbol, Class] Executor to use (:sequential, :parallel, or a class)
     # @param max_threads [Integer, nil] Maximum concurrent threads for parallel executor
-    # @return [Flowline::Result] The execution result
-    def run(initial_input: nil, executor: :sequential, max_threads: nil)
+    # @param cache [Cache::Base, String, nil] Cache store or directory path for result caching
+    # @param force [Boolean] Force re-execution, ignoring cache
+    # @return [Flowrb::Result] The execution result
+    def run(initial_input: nil, executor: :sequential, max_threads: nil, cache: nil, force: false)
       executor_instance = build_executor(executor, max_threads)
-      executor_instance.execute(initial_input: initial_input)
+      cache_store = resolve_cache_store(cache)
+      executor_instance.execute(initial_input: initial_input, cache: cache_store, force: force)
     end
 
     def validate!
@@ -68,6 +71,19 @@ module Flowline
         end
       else
         raise ArgumentError, "Unknown executor: #{executor}. Use :sequential, :parallel, or a class."
+      end
+    end
+
+    def resolve_cache_store(cache)
+      case cache
+      when nil
+        nil
+      when String
+        Cache::FileStore.new(cache)
+      when Cache::Base
+        cache
+      else
+        raise ArgumentError, "Invalid cache option: #{cache.class}. Use a path string or Cache::Base instance."
       end
     end
   end

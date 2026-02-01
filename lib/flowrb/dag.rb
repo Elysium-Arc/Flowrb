@@ -2,7 +2,7 @@
 
 require 'tsort'
 
-module Flowline
+module Flowrb
   # Directed Acyclic Graph implementation using Ruby's TSort.
   # Manages step dependencies and provides topological sorting.
   class DAG

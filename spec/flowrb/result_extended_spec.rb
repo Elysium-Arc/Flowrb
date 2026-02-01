@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe Flowline::StepResult do
+RSpec.describe Flowrb::StepResult do
   describe 'edge cases' do
     it 'handles nil duration' do
       result = described_class.new(step_name: :test, output: 42)
@@ -81,7 +81,7 @@ RSpec.describe Flowline::StepResult do
   end
 end
 
-RSpec.describe Flowline::Result do
+RSpec.describe Flowrb::Result do
   describe 'empty result' do
     it 'is successful when empty' do
       result = described_class.new
@@ -106,9 +106,9 @@ RSpec.describe Flowline::Result do
   end
 
   describe 'multiple step results' do
-    let(:step_a) { Flowline::StepResult.new(step_name: :a, output: 1, status: :success) }
-    let(:step_b) { Flowline::StepResult.new(step_name: :b, output: 2, status: :success) }
-    let(:step_c) { Flowline::StepResult.new(step_name: :c, output: 3, status: :success) }
+    let(:step_a) { Flowrb::StepResult.new(step_name: :a, output: 1, status: :success) }
+    let(:step_b) { Flowrb::StepResult.new(step_name: :b, output: 2, status: :success) }
+    let(:step_c) { Flowrb::StepResult.new(step_name: :c, output: 3, status: :success) }
 
     it 'tracks multiple successful steps' do
       result = described_class.new(step_results: { a: step_a, b: step_b, c: step_c })
@@ -124,7 +124,7 @@ RSpec.describe Flowline::Result do
     end
 
     it 'fails if any step failed' do
-      failed = Flowline::StepResult.new(step_name: :failed, error: StandardError.new)
+      failed = Flowrb::StepResult.new(step_name: :failed, error: StandardError.new)
       result = described_class.new(step_results: { a: step_a, failed: failed, c: step_c })
 
       expect(result).to be_failed
@@ -182,7 +182,7 @@ RSpec.describe Flowline::Result do
     end
 
     it 'includes nested step results' do
-      step = Flowline::StepResult.new(step_name: :test, output: 'value', status: :success)
+      step = Flowrb::StepResult.new(step_name: :test, output: 'value', status: :success)
       result = described_class.new(step_results: { test: step })
 
       hash = result.to_h
@@ -199,14 +199,14 @@ RSpec.describe Flowline::Result do
     end
 
     it 'works with symbol key' do
-      step = Flowline::StepResult.new(step_name: :test, output: 42, status: :success)
+      step = Flowrb::StepResult.new(step_name: :test, output: 42, status: :success)
       result = described_class.new(step_results: { test: step })
 
       expect(result[:test].output).to eq(42)
     end
 
     it 'works with string key converted to symbol' do
-      step = Flowline::StepResult.new(step_name: :test, output: 42, status: :success)
+      step = Flowrb::StepResult.new(step_name: :test, output: 42, status: :success)
       result = described_class.new(step_results: { test: step })
 
       expect(result['test'].output).to eq(42)
@@ -216,9 +216,9 @@ RSpec.describe Flowline::Result do
   describe '#inspect' do
     it 'shows step count' do
       steps = {
-        a: Flowline::StepResult.new(step_name: :a, status: :success),
-        b: Flowline::StepResult.new(step_name: :b, status: :success),
-        c: Flowline::StepResult.new(step_name: :c, status: :success)
+        a: Flowrb::StepResult.new(step_name: :a, status: :success),
+        b: Flowrb::StepResult.new(step_name: :b, status: :success),
+        c: Flowrb::StepResult.new(step_name: :c, status: :success)
       }
       result = described_class.new(step_results: steps)
 
@@ -244,7 +244,7 @@ RSpec.describe Flowline::Result do
 
   describe 'success determination' do
     it 'is failed if result has error even with successful steps' do
-      step = Flowline::StepResult.new(step_name: :ok, output: 1, status: :success)
+      step = Flowrb::StepResult.new(step_name: :ok, output: 1, status: :success)
       result = described_class.new(
         step_results: { ok: step },
         error: StandardError.new('pipeline error')
@@ -254,16 +254,16 @@ RSpec.describe Flowline::Result do
     end
 
     it 'is failed if any step failed even without result error' do
-      ok_step = Flowline::StepResult.new(step_name: :ok, output: 1, status: :success)
-      failed_step = Flowline::StepResult.new(step_name: :failed, error: StandardError.new)
+      ok_step = Flowrb::StepResult.new(step_name: :ok, output: 1, status: :success)
+      failed_step = Flowrb::StepResult.new(step_name: :failed, error: StandardError.new)
       result = described_class.new(step_results: { ok: ok_step, failed: failed_step })
 
       expect(result).to be_failed
     end
 
     it 'is successful only when no error and all steps successful' do
-      step_a = Flowline::StepResult.new(step_name: :a, output: 1, status: :success)
-      step_b = Flowline::StepResult.new(step_name: :b, output: 2, status: :success)
+      step_a = Flowrb::StepResult.new(step_name: :a, output: 1, status: :success)
+      step_b = Flowrb::StepResult.new(step_name: :b, output: 2, status: :success)
       result = described_class.new(step_results: { a: step_a, b: step_b })
 
       expect(result).to be_success

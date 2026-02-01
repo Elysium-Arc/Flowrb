@@ -9,17 +9,17 @@ RSpec.describe 'Validation Edge Cases' do
   describe 'cycle detection' do
     it 'detects simple self-reference cycle' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :self_ref, depends_on: :self_ref do
             'never runs'
           end
         end.validate!
-      end.to raise_error(Flowline::CycleError)
+      end.to raise_error(Flowrb::CycleError)
     end
 
     it 'detects two-node cycle (A -> B -> A)' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :a, depends_on: :b do
             'a'
           end
@@ -28,12 +28,12 @@ RSpec.describe 'Validation Edge Cases' do
             'b'
           end
         end.validate!
-      end.to raise_error(Flowline::CycleError)
+      end.to raise_error(Flowrb::CycleError)
     end
 
     it 'detects three-node cycle (A -> B -> C -> A)' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :a, depends_on: :c do
             'a'
           end
@@ -46,12 +46,12 @@ RSpec.describe 'Validation Edge Cases' do
             'c'
           end
         end.validate!
-      end.to raise_error(Flowline::CycleError)
+      end.to raise_error(Flowrb::CycleError)
     end
 
     it 'detects cycle in otherwise valid graph' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :root do
             'root'
           end
@@ -73,12 +73,12 @@ RSpec.describe 'Validation Edge Cases' do
             'cycle_b'
           end
         end.validate!
-      end.to raise_error(Flowline::CycleError)
+      end.to raise_error(Flowrb::CycleError)
     end
 
     it 'detects long cycle (A -> B -> C -> D -> E -> A)' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :a, depends_on: :e do
             'a'
           end
@@ -99,11 +99,11 @@ RSpec.describe 'Validation Edge Cases' do
             'e'
           end
         end.validate!
-      end.to raise_error(Flowline::CycleError)
+      end.to raise_error(Flowrb::CycleError)
     end
 
     it 'allows valid graph with diamond pattern (not a cycle)' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a do
           'a'
         end
@@ -125,7 +125,7 @@ RSpec.describe 'Validation Edge Cases' do
     end
 
     it 'allows complex valid graph with no cycles' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         # Multiple roots
         step :root1 do
           1
@@ -163,22 +163,22 @@ RSpec.describe 'Validation Edge Cases' do
   describe 'missing dependency detection' do
     it 'detects missing dependency' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :consumer, depends_on: :nonexistent do |_|
             'never runs'
           end
         end.validate!
-      end.to raise_error(Flowline::MissingDependencyError)
+      end.to raise_error(Flowrb::MissingDependencyError)
     end
 
     it 'reports correct missing dependency name' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :consumer, depends_on: :missing_step do |_|
             'never runs'
           end
         end.validate!
-      end.to raise_error(Flowline::MissingDependencyError) do |error|
+      end.to raise_error(Flowrb::MissingDependencyError) do |error|
         expect(error.missing_dependency).to eq(:missing_step)
         expect(error.step_name).to eq(:consumer)
       end
@@ -186,7 +186,7 @@ RSpec.describe 'Validation Edge Cases' do
 
     it 'detects missing dependency in chain' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :a do
             'a'
           end
@@ -203,7 +203,7 @@ RSpec.describe 'Validation Edge Cases' do
             'd'
           end
         end.validate!
-      end.to raise_error(Flowline::MissingDependencyError) do |error|
+      end.to raise_error(Flowrb::MissingDependencyError) do |error|
         expect(error.step_name).to eq(:c)
         expect(error.missing_dependency).to eq(:missing)
       end
@@ -211,12 +211,12 @@ RSpec.describe 'Validation Edge Cases' do
 
     it 'detects multiple missing dependencies (reports first found)' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :consumer, depends_on: %i[missing1 missing2 missing3] do |_missing1:, _missing2:, _missing3:|
             'never runs'
           end
         end.validate!
-      end.to raise_error(Flowline::MissingDependencyError) do |error|
+      end.to raise_error(Flowrb::MissingDependencyError) do |error|
         expect(error.missing_dependency).to(satisfy { |dep| %i[missing1 missing2 missing3].include?(dep) })
       end
     end
@@ -225,7 +225,7 @@ RSpec.describe 'Validation Edge Cases' do
   describe 'duplicate step detection' do
     it 'detects duplicate step names' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :duplicate do
             'first'
           end
@@ -234,12 +234,12 @@ RSpec.describe 'Validation Edge Cases' do
             'second'
           end
         end
-      end.to raise_error(Flowline::DuplicateStepError)
+      end.to raise_error(Flowrb::DuplicateStepError)
     end
 
     it 'reports correct duplicate step name' do
       expect do
-        Flowline.define do
+        Flowrb.define do
           step :my_step do
             'first'
           end
@@ -248,7 +248,7 @@ RSpec.describe 'Validation Edge Cases' do
             'second'
           end
         end
-      end.to raise_error(Flowline::DuplicateStepError) do |error|
+      end.to raise_error(Flowrb::DuplicateStepError) do |error|
         expect(error.step_name).to eq(:my_step)
       end
     end
@@ -256,7 +256,7 @@ RSpec.describe 'Validation Edge Cases' do
 
   describe 'step name edge cases' do
     it 'handles numeric suffixes in step names' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :step1 do
           1
         end
@@ -275,7 +275,7 @@ RSpec.describe 'Validation Edge Cases' do
     end
 
     it 'handles underscore variations in step names' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :step do
           'step'
         end
@@ -302,7 +302,7 @@ RSpec.describe 'Validation Edge Cases' do
     end
 
     it 'converts string step names to symbols' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step 'string_name' do
           'from string'
         end
@@ -320,20 +320,20 @@ RSpec.describe 'Validation Edge Cases' do
 
   describe 'empty and minimal pipelines' do
     it 'validates empty pipeline' do
-      pipeline = Flowline.define {}
+      pipeline = Flowrb.define {}
       expect(pipeline.validate!).to be true
       expect(pipeline).to be_empty
     end
 
     it 'runs empty pipeline successfully' do
-      pipeline = Flowline.define {}
+      pipeline = Flowrb.define {}
       result = pipeline.run
       expect(result).to be_success
       expect(result.outputs).to eq({})
     end
 
     it 'validates single-step pipeline' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :only do
           42
         end
@@ -343,7 +343,7 @@ RSpec.describe 'Validation Edge Cases' do
     end
 
     it 'runs single-step pipeline' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :only do
           42
         end
@@ -357,7 +357,7 @@ RSpec.describe 'Validation Edge Cases' do
 
   describe 'dependency order independence' do
     it 'allows defining dependent before dependency' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         # Define consumer before producer
         step :consumer, depends_on: :producer do |v|
           v * 2
@@ -374,7 +374,7 @@ RSpec.describe 'Validation Edge Cases' do
     end
 
     it 'allows complex out-of-order definitions' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :d, depends_on: %i[b c] do |b:, c:|
           b + c
         end

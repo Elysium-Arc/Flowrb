@@ -3,7 +3,7 @@
 RSpec.describe 'Parallel Execution' do
   describe 'pipeline with executor option' do
     it 'runs with sequential executor by default' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a do
           1
         end
@@ -19,7 +19,7 @@ RSpec.describe 'Parallel Execution' do
     end
 
     it 'runs with parallel executor when specified' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a do
           1
         end
@@ -38,7 +38,7 @@ RSpec.describe 'Parallel Execution' do
       execution_times = {}
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :slow1 do
           start = Time.now
           sleep 0.1
@@ -71,7 +71,7 @@ RSpec.describe 'Parallel Execution' do
     end
 
     it 'respects max_threads option' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         5.times do |i|
           step :"step_#{i}" do
             sleep 0.05
@@ -93,7 +93,7 @@ RSpec.describe 'Parallel Execution' do
 
   describe 'error handling in parallel execution' do
     it 'raises StepError when a parallel step fails' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :ok do
           'success'
         end
@@ -103,7 +103,7 @@ RSpec.describe 'Parallel Execution' do
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError) do |error|
         expect(error.step_name).to eq(:fail)
         expect(error.original_error.message).to eq('parallel failure')
       end
@@ -113,7 +113,7 @@ RSpec.describe 'Parallel Execution' do
       executed = []
       mutex = Mutex.new
 
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :a do
           mutex.synchronize { executed << :a }
           'a'
@@ -130,12 +130,12 @@ RSpec.describe 'Parallel Execution' do
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError)
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError)
       expect(executed).not_to include(:c)
     end
 
     it 'preserves partial results on failure' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :ok do
           'completed'
         end
@@ -145,7 +145,7 @@ RSpec.describe 'Parallel Execution' do
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowline::StepError) do |error|
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError) do |error|
         expect(error.partial_results[:ok].output).to eq('completed')
       end
     end
@@ -153,7 +153,7 @@ RSpec.describe 'Parallel Execution' do
 
   describe 'real-world parallel scenario' do
     it 'processes data with parallel transformations' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         step :fetch_data do
           { users: [1, 2, 3], orders: [10, 20, 30] }
         end
@@ -189,7 +189,7 @@ RSpec.describe 'Parallel Execution' do
     end
 
     it 'handles complex multi-level parallel execution' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         # Level 0: roots
         step :fetch_a do
           sleep 0.02
@@ -236,7 +236,7 @@ RSpec.describe 'Parallel Execution' do
 
   describe 'thread safety' do
     it 'handles many parallel steps safely' do
-      pipeline = Flowline.define do
+      pipeline = Flowrb.define do
         100.times do |i|
           step :"step_#{i}" do
             i * 2
