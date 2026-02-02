@@ -12,14 +12,14 @@ RSpec.describe 'Retry Patterns' do
     it 'stops after specified number of attempts' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :limited_retries, retries: 3 do
           attempts += 1
           raise "Attempt #{attempts} failed"
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError)
+      expect { pipeline.run }.to raise_error(Piperb::StepError)
       expect(attempts).to eq(4) # 1 initial + 3 retries
     end
 
@@ -27,14 +27,14 @@ RSpec.describe 'Retry Patterns' do
     it 'handles zero retries (no retry attempts)' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :no_retries, retries: 0 do
           attempts += 1
           raise 'immediate failure'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError)
+      expect { pipeline.run }.to raise_error(Piperb::StepError)
       expect(attempts).to eq(1)
     end
 
@@ -42,14 +42,14 @@ RSpec.describe 'Retry Patterns' do
     it 'handles retry options with zero retries gracefully' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :backoff_no_retries, retries: 0, retry_delay: 1, retry_backoff: :exponential do
           attempts += 1
           raise 'fails immediately'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError)
+      expect { pipeline.run }.to raise_error(Piperb::StepError)
       expect(attempts).to eq(1)
     end
 
@@ -58,7 +58,7 @@ RSpec.describe 'Retry Patterns' do
       attempts = 0
       success_on = 10
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :many_retries, retries: 15 do
           attempts += 1
           raise 'not yet' if attempts < success_on
@@ -79,7 +79,7 @@ RSpec.describe 'Retry Patterns' do
     it 'applies fixed delay between retries' do
       timestamps = []
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :fixed_delay, retries: 2, retry_delay: 0.1 do
           timestamps << Time.now
           raise 'retry' if timestamps.size < 3
@@ -102,7 +102,7 @@ RSpec.describe 'Retry Patterns' do
     it 'applies exponential backoff with doubling delays' do
       timestamps = []
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :exp_backoff, retries: 3, retry_delay: 0.05, retry_backoff: :exponential do
           timestamps << Time.now
           raise 'retry' if timestamps.size < 4
@@ -128,7 +128,7 @@ RSpec.describe 'Retry Patterns' do
     it 'applies linear backoff with incrementing delays' do
       timestamps = []
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :linear_backoff, retries: 3, retry_delay: 0.05, retry_backoff: :linear do
           timestamps << Time.now
           raise 'retry' if timestamps.size < 4
@@ -154,7 +154,7 @@ RSpec.describe 'Retry Patterns' do
     it 'handles zero retry_delay (immediate retries)' do
       timestamps = []
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :no_delay, retries: 3, retry_delay: 0 do
           timestamps << Time.now
           raise 'retry' if timestamps.size < 4
@@ -178,7 +178,7 @@ RSpec.describe 'Retry Patterns' do
     it 'retries only for specified exception types' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :selective, retries: 3, retry_if: ->(e) { e.is_a?(IOError) } do
           attempts += 1
           raise IOError, 'transient IO error' if attempts < 3
@@ -196,14 +196,14 @@ RSpec.describe 'Retry Patterns' do
     it 'does not retry for excluded exception types' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :no_retry_for_arg_error, retries: 3, retry_if: ->(e) { !e.is_a?(ArgumentError) } do
           attempts += 1
           raise ArgumentError, 'permanent error'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError)
+      expect { pipeline.run }.to raise_error(Piperb::StepError)
       expect(attempts).to eq(1) # No retries for ArgumentError
     end
 
@@ -212,7 +212,7 @@ RSpec.describe 'Retry Patterns' do
       attempts = 0
       errors = [IOError, Errno::ECONNREFUSED, Errno::ETIMEDOUT]
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :multi_exception, retries: 5, retry_if: ->(e) { errors.any? { |t| e.is_a?(t) } } do
           attempts += 1
           case attempts
@@ -234,14 +234,14 @@ RSpec.describe 'Retry Patterns' do
       attempts = 0
       permanent_error_class = Class.new(StandardError)
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :fast_fail, retries: 5, retry_if: ->(e) { !e.is_a?(permanent_error_class) } do
           attempts += 1
           raise permanent_error_class, 'API key invalid - no point retrying'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError)
+      expect { pipeline.run }.to raise_error(Piperb::StepError)
       expect(attempts).to eq(1)
     end
   end
@@ -251,7 +251,7 @@ RSpec.describe 'Retry Patterns' do
     it 'retries after timeout and eventually succeeds' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :timeout_then_success, timeout: 0.1, retries: 3 do
           attempts += 1
           if attempts < 3
@@ -273,7 +273,7 @@ RSpec.describe 'Retry Patterns' do
       attempt_durations = []
       mutex = Mutex.new
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :independent_timeouts, timeout: 0.1, retries: 2 do
           start = Time.now
           begin
@@ -299,15 +299,15 @@ RSpec.describe 'Retry Patterns' do
     it 'fails when all retry attempts timeout' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :always_timeout, timeout: 0.05, retries: 2 do
           attempts += 1
           sleep 1 # Always exceeds timeout
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
-        expect(error.original_error).to be_a(Flowrb::TimeoutError)
+      expect { pipeline.run }.to raise_error(Piperb::StepError) do |error|
+        expect(error.original_error).to be_a(Piperb::TimeoutError)
       end
       expect(attempts).to eq(3) # 1 initial + 2 retries
     end
@@ -318,13 +318,13 @@ RSpec.describe 'Retry Patterns' do
     it 'preserves original exception in StepError' do
       custom_error = Class.new(StandardError)
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :custom_error_step, retries: 2 do
           raise custom_error, 'custom message'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Piperb::StepError) do |error|
         expect(error.original_error).to be_a(custom_error)
         expect(error.original_error.message).to eq('custom message')
       end
@@ -334,14 +334,14 @@ RSpec.describe 'Retry Patterns' do
     it 'preserves the last error after all retries exhausted' do
       attempt = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :changing_errors, retries: 2 do
           attempt += 1
           raise "Error on attempt #{attempt}"
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Piperb::StepError) do |error|
         expect(error.original_error.message).to eq('Error on attempt 3')
       end
     end
@@ -353,7 +353,7 @@ RSpec.describe 'Retry Patterns' do
       attempts = { a: 0, b: 0, c: 0 }
       mutex = Mutex.new
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :step_a, retries: 1 do
           mutex.synchronize { attempts[:a] += 1 }
           raise 'fail a' if attempts[:a] < 2
@@ -386,7 +386,7 @@ RSpec.describe 'Retry Patterns' do
       attempts = { ok: 0, fail: 0 }
       mutex = Mutex.new
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :ok_step, retries: 2 do
           mutex.synchronize { attempts[:ok] += 1 }
           raise 'temporary' if attempts[:ok] < 2
@@ -400,7 +400,7 @@ RSpec.describe 'Retry Patterns' do
         end
       end
 
-      expect { pipeline.run(executor: :parallel) }.to raise_error(Flowrb::StepError) do |error|
+      expect { pipeline.run(executor: :parallel) }.to raise_error(Piperb::StepError) do |error|
         expect(error.step_name).to eq(:fail_step)
       end
     end
@@ -410,7 +410,7 @@ RSpec.describe 'Retry Patterns' do
       timestamps = { a: [], b: [] }
       mutex = Mutex.new
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :delayed_a, retries: 2, retry_delay: 0.05 do
           mutex.synchronize { timestamps[:a] << Time.now }
           raise 'retry a' if timestamps[:a].size < 3
@@ -441,7 +441,7 @@ RSpec.describe 'Retry Patterns' do
     it 'tracks retry count in step result' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :tracked, retries: 5 do
           attempts += 1
           raise 'retry' if attempts < 4
@@ -456,7 +456,7 @@ RSpec.describe 'Retry Patterns' do
     end
 
     it 'reports zero retries for first-attempt success' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :immediate_success, retries: 5 do
           'instant success'
         end
@@ -467,13 +467,13 @@ RSpec.describe 'Retry Patterns' do
     end
 
     it 'reports retry count even on final failure' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :always_fails, retries: 3 do
           raise 'nope'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
+      expect { pipeline.run }.to raise_error(Piperb::StepError) do |error|
         failed_step_result = error.partial_results[:always_fails]
         expect(failed_step_result.retries).to eq(3)
       end
@@ -487,7 +487,7 @@ RSpec.describe 'Retry Patterns' do
       call_count = 0
       stored_value = nil
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :idempotent_write, retries: 3 do
           call_count += 1
           # Idempotent: always sets same value
@@ -509,7 +509,7 @@ RSpec.describe 'Retry Patterns' do
     it 'handles nil retry_if (always retry)' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :nil_condition, retries: 2, retry_if: nil do
           attempts += 1
           raise 'error' if attempts < 3
@@ -526,7 +526,7 @@ RSpec.describe 'Retry Patterns' do
     it 'handles exception in retry_if condition' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :bad_condition, retries: 2, retry_if: ->(_e) { raise 'condition error' } do
           attempts += 1
           raise 'step error'
@@ -542,22 +542,22 @@ RSpec.describe 'Retry Patterns' do
     end
 
     it 'handles very short timeout' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :micro_timeout, timeout: 0.001 do
           sleep 0.1
           'never'
         end
       end
 
-      expect { pipeline.run }.to raise_error(Flowrb::StepError) do |error|
-        expect(error.original_error).to be_a(Flowrb::TimeoutError)
+      expect { pipeline.run }.to raise_error(Piperb::StepError) do |error|
+        expect(error.original_error).to be_a(Piperb::TimeoutError)
       end
     end
 
     it 'handles step that succeeds on last retry' do
       attempts = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :last_chance, retries: 3 do
           attempts += 1
           raise 'not yet' if attempts <= 3 # Fails initial + first 2 retries

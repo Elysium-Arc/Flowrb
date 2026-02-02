@@ -3,7 +3,7 @@
 RSpec.describe 'Data Transformation Pipelines' do
   describe 'string processing pipeline' do
     it 'processes strings through multiple transformations' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :input do
           '  Hello World  '
         end
@@ -33,7 +33,7 @@ RSpec.describe 'Data Transformation Pipelines' do
 
   describe 'numeric processing pipeline' do
     it 'performs mathematical operations in sequence' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :numbers do
           [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
         end
@@ -70,7 +70,7 @@ RSpec.describe 'Data Transformation Pipelines' do
 
   describe 'hash transformation pipeline' do
     it 'transforms and merges hash data' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :user_data do
           { name: 'John Doe', email: 'john@example.com', age: 30 }
         end
@@ -110,7 +110,7 @@ RSpec.describe 'Data Transformation Pipelines' do
 
   describe 'array processing with aggregation' do
     it 'processes arrays with multiple aggregations' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :raw_data do
           [
             { name: 'Alice', score: 85 },
@@ -162,7 +162,7 @@ RSpec.describe 'Data Transformation Pipelines' do
 
   describe 'conditional-like processing' do
     it 'handles conditional-like branching via data' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :input do
           { value: 42, threshold: 50 }
         end
@@ -193,7 +193,7 @@ RSpec.describe 'Data Transformation Pipelines' do
 
   describe 'nested data structure processing' do
     it 'handles deeply nested structures' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :nested_input do
           {
             level1: {
@@ -239,7 +239,7 @@ RSpec.describe 'Data Transformation Pipelines' do
 
   describe 'type conversion pipeline' do
     it 'converts between different data types' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :string_numbers do
           '1,2,3,4,5'
         end

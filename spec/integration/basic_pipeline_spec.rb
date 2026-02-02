@@ -3,7 +3,7 @@
 RSpec.describe 'Basic Pipeline Integration' do
   describe 'ETL-style pipeline' do
     it 'executes fetch -> transform -> load pipeline' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :fetch do
           [1, 2, 3, 4, 5]
         end
@@ -26,7 +26,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'fan-out pipeline' do
     it 'executes one-to-many dependencies' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :fetch do
           { users: [1, 2, 3], products: [10, 20] }
         end
@@ -50,7 +50,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'fan-in pipeline' do
     it 'executes many-to-one dependencies with keyword arguments' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :fetch_users do
           %w[alice bob]
         end
@@ -76,7 +76,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'diamond dependency pattern' do
     it 'correctly handles diamond dependencies (A -> B, A -> C, B -> D, C -> D)' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :source do
           100
         end
@@ -106,7 +106,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'complex multi-level pipeline' do
     it 'handles multiple levels of dependencies' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :level1 do
           1
         end
@@ -141,7 +141,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'initial input' do
     it 'passes initial input to root steps' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :uppercase, &:upcase
 
         step :add_exclaim, depends_on: :uppercase do |text|
@@ -157,7 +157,7 @@ RSpec.describe 'Basic Pipeline Integration' do
     end
 
     it 'passes initial input to multiple roots' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :double do |n|
           n * 2
         end
@@ -181,7 +181,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'nil outputs' do
     it 'handles nil output from steps' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :return_nil do
           nil
         end
@@ -201,7 +201,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'empty pipeline' do
     it 'runs successfully with no steps' do
-      pipeline = Flowrb.define {}
+      pipeline = Piperb.define {}
 
       result = pipeline.run
 
@@ -212,7 +212,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'single step pipeline' do
     it 'runs a single step with no dependencies' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :only_one do
           'only result'
         end
@@ -227,7 +227,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'result inspection' do
     it 'provides duration information' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :slow do
           sleep(0.01)
           'done'
@@ -242,7 +242,7 @@ RSpec.describe 'Basic Pipeline Integration' do
     end
 
     it 'provides output access via outputs method' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :a do
           1
         end
@@ -260,7 +260,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'mermaid diagram generation' do
     it 'generates correct mermaid diagram' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :fetch do
           []
         end
@@ -284,7 +284,7 @@ RSpec.describe 'Basic Pipeline Integration' do
 
   describe 'validation' do
     it 'can validate before running' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :a do
           1
         end

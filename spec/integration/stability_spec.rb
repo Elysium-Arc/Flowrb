@@ -3,7 +3,7 @@
 RSpec.describe 'Pipeline Stability' do
   describe 'rerunning pipelines' do
     it 'can run the same pipeline multiple times' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :counter do
           rand(1000)
         end
@@ -24,7 +24,7 @@ RSpec.describe 'Pipeline Stability' do
     it 'produces independent results on each run' do
       call_count = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :increment do
           call_count += 1
         end
@@ -40,7 +40,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'handles different initial inputs on reruns' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :process, &:upcase
       end
 
@@ -56,7 +56,7 @@ RSpec.describe 'Pipeline Stability' do
 
   describe 'pipeline immutability' do
     it 'pipeline definition is stable after creation' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :a do
           1
         end
@@ -77,7 +77,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'results are independent objects' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :data do
           [1, 2, 3]
         end
@@ -96,7 +96,7 @@ RSpec.describe 'Pipeline Stability' do
 
   describe 'large pipelines' do
     it 'handles pipeline with 50 sequential steps' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :step_0 do
           0
         end
@@ -115,7 +115,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'handles pipeline with 20 parallel roots merging' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         20.times do |i|
           step :"root_#{i}" do
             i
@@ -134,7 +134,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'handles wide diamond pattern' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :source do
           100
         end
@@ -160,7 +160,7 @@ RSpec.describe 'Pipeline Stability' do
 
   describe 'timing consistency' do
     it 'step durations sum approximately to total duration' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :a do
           sleep(0.01)
           1
@@ -189,7 +189,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'timestamps are in chronological order' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :first do
           sleep(0.005)
           1
@@ -217,7 +217,7 @@ RSpec.describe 'Pipeline Stability' do
 
   describe 'output type preservation' do
     it 'preserves nil output' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :nil_step do
           nil
         end
@@ -228,7 +228,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'preserves false output' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :false_step do
           false
         end
@@ -239,7 +239,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'preserves zero output' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :zero_step do
           0
         end
@@ -250,7 +250,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'preserves empty string output' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :empty_string do
           ''
         end
@@ -261,7 +261,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'preserves empty array output' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :empty_array do
           []
         end
@@ -272,7 +272,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'preserves empty hash output' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :empty_hash do
           {}
         end
@@ -285,20 +285,20 @@ RSpec.describe 'Pipeline Stability' do
 
   describe 'error isolation' do
     it 'error in one pipeline does not affect another' do
-      good_pipeline = Flowrb.define do
+      good_pipeline = Piperb.define do
         step :good do
           'success'
         end
       end
 
-      bad_pipeline = Flowrb.define do
+      bad_pipeline = Piperb.define do
         step :bad do
           raise 'failure'
         end
       end
 
       # Run bad pipeline first
-      expect { bad_pipeline.run }.to raise_error(Flowrb::StepError)
+      expect { bad_pipeline.run }.to raise_error(Piperb::StepError)
 
       # Good pipeline should still work
       result = good_pipeline.run
@@ -309,7 +309,7 @@ RSpec.describe 'Pipeline Stability' do
     it 'error does not corrupt pipeline state' do
       run_count = 0
 
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :maybe_fail do
           run_count += 1
           raise 'fail' if run_count == 2
@@ -324,7 +324,7 @@ RSpec.describe 'Pipeline Stability' do
       expect(result1[:maybe_fail].output).to eq(1)
 
       # Second run fails
-      expect { pipeline.run }.to raise_error(Flowrb::StepError)
+      expect { pipeline.run }.to raise_error(Piperb::StepError)
 
       # Third run succeeds again
       result3 = pipeline.run
@@ -335,7 +335,7 @@ RSpec.describe 'Pipeline Stability' do
 
   describe 'validation stability' do
     it 'valid pipeline stays valid' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :a do
           1
         end
@@ -351,7 +351,7 @@ RSpec.describe 'Pipeline Stability' do
     end
 
     it 'invalid pipeline consistently fails validation' do
-      pipeline = Flowrb.define do
+      pipeline = Piperb.define do
         step :a, depends_on: :b do
           1
         end
@@ -362,7 +362,7 @@ RSpec.describe 'Pipeline Stability' do
       end
 
       10.times do
-        expect { pipeline.validate! }.to raise_error(Flowrb::CycleError)
+        expect { pipeline.validate! }.to raise_error(Piperb::CycleError)
       end
     end
   end
